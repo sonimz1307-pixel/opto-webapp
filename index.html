@@ -2,11 +2,14 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Редактор товаров</title>
+  <title>Редактор товаров поставщика</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -14,30 +17,167 @@
       color: #e5e7eb;
     }
     .wrap {
-      padding: 16px;
+      padding: 12px;
+      max-width: 900px;
+      margin: 0 auto 24px;
     }
     .card {
       background: #020617;
       border: 1px solid #1f2937;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 16px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 14px 45px rgba(0,0,0,0.5);
     }
     h1 {
       font-size: 18px;
-      margin: 0 0 8px;
+      margin: 0 0 6px;
     }
     .small {
       font-size: 12px;
       color: #9ca3af;
     }
     .badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       padding: 2px 8px;
       border-radius: 999px;
-      background: #1f2937;
+      background: #111827;
       font-size: 11px;
       margin-top: 8px;
+      color: #9ca3af;
+    }
+    .badge span {
+      color: #e5e7eb;
+    }
+    .toolbar {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .input {
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: #e5e7eb;
+      outline: none;
+      min-width: 0;
+    }
+    .input::placeholder {
+      color: #6b7280;
+    }
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: #f9fafb;
+    }
+    .btn-primary[disabled] {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #1f2937;
+      color: #e5e7eb;
+    }
+    .status {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+    .status strong {
+      color: #e5e7eb;
+    }
+    .table-wrap {
+      margin-top: 12px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead {
+      background: #020617;
+    }
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #111827;
+    }
+    th {
+      text-align: left;
+      font-weight: 500;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(even) {
+      background: #020617;
+    }
+    tbody tr:nth-child(odd) {
+      background: #030712;
+    }
+    .name-cell {
+      max-width: 340px;
+    }
+    .name-text {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .price-input {
+      width: 80px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      color: #e5e7eb;
+      outline: none;
+    }
+    .price-input:focus {
+      border-color: #3b82f6;
+    }
+    .tag-changed {
+      display: inline-block;
+      font-size: 10px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #e5e7eb;
+      margin-left: 4px;
+    }
+    .empty {
+      padding: 12px;
+      font-size: 13px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    .error {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #f97373;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 640px) {
+      .name-cell {
+        max-width: 200px;
+      }
+      .price-input {
+        width: 70px;
+      }
     }
   </style>
 </head>
@@ -46,30 +186,309 @@
     <div class="card">
       <h1>Редактор товаров поставщика</h1>
       <div id="info" class="small">Загрузка данных...</div>
-      <div id="supplier" class="badge"></div>
+      <div class="badge">
+        ID поставщика: <span id="supplier-badge">—</span>
+      </div>
+
+      <div class="toolbar">
+        <input
+          id="search"
+          class="input"
+          type="text"
+          placeholder="Фильтр по названию..."
+        />
+        <button id="btn-refresh" class="btn btn-ghost">Обновить</button>
+        <button id="btn-save" class="btn btn-primary" disabled>
+          💾 Сохранить изменения
+        </button>
+      </div>
+
+      <div id="status" class="status"></div>
+      <div id="error" class="error" style="display:none;"></div>
+
+      <div class="table-wrap" id="table-wrap">
+        <div class="empty" id="empty-msg">Здесь появятся товары после загрузки.</div>
+        <table style="display:none;" id="table">
+          <thead>
+            <tr>
+              <th style="width:40%;">Наименование</th>
+              <th>Мин. цена</th>
+              <th>Макс. цена</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <script>
-    // Расширяем WebApp на всю высоту
-    if (window.Telegram && window.Telegram.WebApp) {
-      const tg = window.Telegram.WebApp;
+    // ========= НАСТРОЙКИ SUPABASE =========
+    // ВАЖНО: сюда нужно вставить ТВОЙ URL и PUBLIC ANON KEY из настроек Supabase (Settings → API).
+    const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // у тебя он такой же, как в боте
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXRiYWVqenJzYWFybmVyY2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjI3MTAsImV4cCI6MjA3ODI5ODcxMH0.aF9SuRPEmYpvPYFbbfl7pcCJc6MI_Acfxc6rRRrpuaM";
+
+    // ========= Telegram WebApp =========
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) {
       tg.expand();
     }
 
-    // Пытаемся получить supplier_id из URL
     const params = new URLSearchParams(window.location.search);
     const supplierId = params.get("supplier_id");
 
     const infoEl = document.getElementById("info");
-    const suppEl = document.getElementById("supplier");
+    const badgeEl = document.getElementById("supplier-badge");
+    const tbody = document.getElementById("tbody");
+    const table = document.getElementById("table");
+    const emptyMsg = document.getElementById("empty-msg");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+    const searchInput = document.getElementById("search");
+    const btnRefresh = document.getElementById("btn-refresh");
+    const btnSave = document.getElementById("btn-save");
 
     if (!supplierId) {
-      infoEl.textContent = "Ошибка: supplier_id не передан в URL";
-      suppEl.textContent = "";
+      infoEl.textContent = "❌ Ошибка: supplier_id не передан в URL";
+      badgeEl.textContent = "—";
     } else {
       infoEl.textContent = "WebApp успешно открыт 🙌";
-      suppEl.textContent = "supplier_id: " + supplierId;
+      badgeEl.textContent = supplierId;
+    }
+
+    let allProducts = [];
+    let filteredProducts = [];
+    let changed = new Map(); // id -> { id, price_min, price_max }
+
+    function setError(msg) {
+      if (!msg) {
+        errorEl.style.display = "none";
+        errorEl.textContent = "";
+      } else {
+        errorEl.style.display = "block";
+        errorEl.textContent = msg;
+      }
+    }
+
+    function setStatus(text) {
+      statusEl.innerHTML = text || "";
+    }
+
+    function setSaveButtonState() {
+      const count = changed.size;
+      if (count === 0) {
+        btnSave.disabled = true;
+        btnSave.textContent = "💾 Сохранить изменения";
+      } else {
+        btnSave.disabled = false;
+        btnSave.textContent = `💾 Сохранить изменения (${count})`;
+      }
+    }
+
+    function renderTable(data) {
+      tbody.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        table.style.display = "none";
+        emptyMsg.style.display = "block";
+        emptyMsg.textContent = "Товары не найдены.";
+        return;
+      }
+
+      table.style.display = "table";
+      emptyMsg.style.display = "none";
+
+      for (const row of data) {
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.className = "name-cell";
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "name-text";
+        nameDiv.textContent = row.product_name || "(без названия)";
+        tdName.appendChild(nameDiv);
+        if (changed.has(row.id)) {
+          const tag = document.createElement("span");
+          tag.className = "tag-changed";
+          tag.textContent = "изменено";
+          tdName.appendChild(tag);
+        }
+        tr.appendChild(tdName);
+
+        const tdMin = document.createElement("td");
+        const inputMin = document.createElement("input");
+        inputMin.type = "number";
+        inputMin.step = "0.01";
+        inputMin.className = "price-input";
+        inputMin.value = row.price_min != null ? row.price_min : "";
+        inputMin.addEventListener("input", () => onPriceChange(row.id, "price_min", inputMin.value));
+        tdMin.appendChild(inputMin);
+        tr.appendChild(tdMin);
+
+        const tdMax = document.createElement("td");
+        const inputMax = document.createElement("input");
+        inputMax.type = "number";
+        inputMax.step = "0.01";
+        inputMax.className = "price-input";
+        inputMax.value = row.price_max != null ? row.price_max : "";
+        inputMax.addEventListener("input", () => onPriceChange(row.id, "price_max", inputMax.value));
+        tdMax.appendChild(inputMax);
+        tr.appendChild(tdMax);
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function applyFilter() {
+      const q = (searchInput.value || "").toLowerCase().trim();
+      if (!q) {
+        filteredProducts = allProducts.slice();
+      } else {
+        filteredProducts = allProducts.filter(p =>
+          (p.product_name || "").toLowerCase().includes(q)
+        );
+      }
+      renderTable(filteredProducts);
+      setStatus(`Показано <strong>${filteredProducts.length}</strong> из ${allProducts.length} товаров`);
+    }
+
+    function onPriceChange(id, field, value) {
+      const num = value === "" ? null : Number(value.replace(",", "."));
+      const idx = allProducts.findIndex(p => p.id === id);
+      if (idx === -1) return;
+
+      allProducts[idx][field] = num;
+
+      const current = changed.get(id) || {
+        id,
+        price_min: allProducts[idx].price_min,
+        price_max: allProducts[idx].price_max,
+      };
+      current[field] = num;
+      changed.set(id, current);
+
+      setSaveButtonState();
+      applyFilter();
+    }
+
+    async function loadProducts() {
+      if (!supplierId) return;
+
+      setError("");
+      setStatus("Загружаю товары...");
+      btnRefresh.disabled = true;
+
+      try {
+        const url =
+          `${SUPABASE_URL}/rest/v1/products` +
+          `?select=id,product_name,price_min,price_max` +
+          `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
+          `&order=product_name.asc`;
+
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Ошибка загрузки (${res.status}): ${text}`);
+        }
+
+        const data = await res.json();
+        allProducts = data;
+        changed.clear();
+        setSaveButtonState();
+
+        if (data.length === 0) {
+          setStatus("Для этого поставщика пока нет товаров.");
+        } else {
+          setStatus(`Загружено <strong>${data.length}</strong> товаров.`);
+        }
+
+        applyFilter();
+      } catch (err) {
+        console.error(err);
+        setError(String(err.message || err));
+        setStatus("Не удалось загрузить товары.");
+      } finally {
+        btnRefresh.disabled = false;
+      }
+    }
+
+    async function saveChanges() {
+      if (changed.size === 0) return;
+      setError("");
+      btnSave.disabled = true;
+      btnSave.textContent = "Сохраняю...";
+
+      try {
+        const items = Array.from(changed.values());
+
+        // Обновляем по одному — обычно изменяют немного позиций
+        for (const item of items) {
+          const url = `${SUPABASE_URL}/rest/v1/products?id=eq.${item.id}`;
+          const body = {
+            price_min: item.price_min,
+            price_max: item.price_max,
+          };
+
+          const res = await fetch(url, {
+            method: "PATCH",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Ошибка сохранения товара ${item.id} (${res.status}): ${text}`);
+          }
+        }
+
+        changed.clear();
+        setSaveButtonState();
+        setStatus(`Изменения сохранены. Обновляю список...`);
+        await loadProducts();
+      } catch (err) {
+        console.error(err);
+        setError(String(err.message || err));
+        setStatus("Произошла ошибка при сохранении.");
+      } finally {
+        setSaveButtonState();
+      }
+    }
+
+    // ========= События =========
+    searchInput.addEventListener("input", () => {
+      applyFilter();
+    });
+
+    btnRefresh.addEventListener("click", () => {
+      loadProducts();
+    });
+
+    btnSave.addEventListener("click", () => {
+      if (changed.size > 0) {
+        saveChanges();
+      }
+    });
+
+    // ========= Старт =========
+    if (!supplierId) {
+      setStatus("Нет supplier_id — редактирование недоступно.");
+    } else if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("ВСТАВЬ_")) {
+      setStatus("Заполните SUPABASE_ANON_KEY в index.html");
+      setError("В коде WebApp нужно указать ваш PUBLIC ANON KEY Supabase.");
+    } else {
+      loadProducts();
     }
   </script>
 </body>

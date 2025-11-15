@@ -4,8 +4,15 @@
   <meta charset="UTF-8" />
   <title>Редактор товаров поставщика</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Отключаем кэш браузера/WebView -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -250,7 +257,6 @@
 
   <script>
     // ========= НАСТРОЙКИ SUPABASE =========
-    // ВАЖНО: сюда нужно вставить ТВОЙ URL и PUBLIC ANON KEY из настроек Supabase (Settings → API).
     const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // такой же, как в боте
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXRiYWVqenJzYWFybmVyY2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjI3MTAsImV4cCI6MjA3ODI5ODcxMH0.aF9SuRPEmYpvPYFbbfl7pcCJc6MI_Acfxc6rRRrpuaM";
 
@@ -447,6 +453,48 @@
       renderCurrentPage();
     }
 
+    // ========= Загрузка товаров пачками по 1000 =========
+    const BATCH_SIZE = 1000;
+
+    async function fetchBatch(offset) {
+      const from = offset;
+      const to = offset + BATCH_SIZE - 1;
+
+      const url =
+        `${SUPABASE_URL}/rest/v1/products` +
+        `?select=id,product_name,price_min,price_max` +
+        `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
+        `&order=product_name.asc`;
+
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Range-Unit": "items",
+          Range: `${from}-${to}`,
+          Prefer: "count=exact"
+        }
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Ошибка загрузки (${res.status}): ${text}`);
+      }
+
+      const data = await res.json();
+      const contentRange = res.headers.get("Content-Range") || "";
+      // формат: "0-999/2333" или "0-999/*"
+      let total = null;
+      const parts = contentRange.split("/");
+      if (parts.length === 2 && parts[1] !== "*") {
+        const t = parseInt(parts[1], 10);
+        if (!isNaN(t)) total = t;
+      }
+
+      return { data, total };
+    }
+
     async function loadProducts() {
       if (!supplierId) return;
 
@@ -455,40 +503,39 @@
       btnRefresh.disabled = true;
 
       try {
-        const url =
-  `${SUPABASE_URL}/rest/v1/products` +
-  `?select=id,product_name,price_min,price_max` +
-  `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
-  `&order=product_name.asc`;
+        allProducts = [];
+        let offset = 0;
+        let total = null;
 
+        while (true) {
+          const { data, total: batchTotal } = await fetchBatch(offset);
+          allProducts = allProducts.concat(data);
 
-        const res = await fetch(url, {
-  method: "GET",
-  headers: {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    Range: "0-4999",
-    "Prefer": "count=exact"
-  }
-});
+          if (batchTotal != null) {
+            total = batchTotal;
+          }
 
+          if (data.length < BATCH_SIZE) {
+            break;
+          }
 
+          offset += BATCH_SIZE;
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Ошибка загрузки (${res.status}): ${text}`);
+          if (total != null && allProducts.length >= total) {
+            break;
+          }
         }
 
-        const data = await res.json();
-        allProducts = data;
         changed.clear();
         setSaveButtonState();
 
-        if (data.length === 0) {
+        if (allProducts.length === 0) {
           setStatus("Для этого поставщика пока нет товаров.");
         }
 
-        applyFilter();
+        filteredProducts = allProducts.slice();
+        currentPage = 1;
+        renderCurrentPage();
       } catch (err) {
         console.error(err);
         setError(String(err.message || err));
@@ -580,10 +627,7 @@
     // ========= Старт =========
     if (!supplierId) {
       setStatus("Нет supplier_id — редактирование недоступно.");
-    } else if (
-      !SUPABASE_ANON_KEY ||
-      SUPABASE_ANON_KEY.startsWith("ВСТАВЬ_")
-    ) {
+    } else if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("ВСТАВЬ_")) {
       setStatus("Заполните SUPABASE_ANON_KEY в index.html");
       setError("В коде WebApp нужно указать ваш PUBLIC ANON KEY Supabase.");
     } else {
@@ -592,5 +636,3 @@
   </script>
 </body>
 </html>
-
-

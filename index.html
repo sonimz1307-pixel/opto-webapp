@@ -463,11 +463,13 @@
           `&limit=5000`; // запас по количеству
 
         const res = await fetch(url, {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        });
+  headers: {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Range: "0-4999"   // Снимаем лимит Supabase в 1000 строк
+  },
+});
+
 
         if (!res.ok) {
           const text = await res.text();
@@ -587,3 +589,4 @@
   </script>
 </body>
 </html>
+

@@ -91,6 +91,10 @@
       border: 1px solid #1f2937;
       color: #e5e7eb;
     }
+    .btn-ghost[disabled] {
+      opacity: 0.4;
+      cursor: default;
+    }
     .status {
       font-size: 11px;
       color: #9ca3af;
@@ -103,7 +107,8 @@
       margin-top: 12px;
       border-radius: 10px;
       border: 1px solid #1f2937;
-      overflow: hidden;
+      overflow-y: auto;
+      max-height: 70vh; /* скролл внутри таблицы */
     }
     table {
       width: 100%;
@@ -112,6 +117,9 @@
     }
     thead {
       background: #020617;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
     th, td {
       padding: 6px 8px;
@@ -171,6 +179,17 @@
       color: #f97373;
       white-space: pre-wrap;
     }
+    #pagination {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    #page-info {
+      font-size: 12px;
+      color: #9ca3af;
+    }
     @media (max-width: 640px) {
       .name-cell {
         max-width: 200px;
@@ -203,6 +222,12 @@
         </button>
       </div>
 
+      <div id="pagination">
+        <button id="page-prev" class="btn btn-ghost">←</button>
+        <span id="page-info">Страница 1 из 1</span>
+        <button id="page-next" class="btn btn-ghost">→</button>
+      </div>
+
       <div id="status" class="status"></div>
       <div id="error" class="error" style="display:none;"></div>
 
@@ -226,7 +251,7 @@
   <script>
     // ========= НАСТРОЙКИ SUPABASE =========
     // ВАЖНО: сюда нужно вставить ТВОЙ URL и PUBLIC ANON KEY из настроек Supabase (Settings → API).
-    const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // у тебя он такой же, как в боте
+    const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // такой же, как в боте
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXRiYWVqenJzYWFybmVyY2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjI3MTAsImV4cCI6MjA3ODI5ODcxMH0.aF9SuRPEmYpvPYFbbfl7pcCJc6MI_Acfxc6rRRrpuaM";
 
     // ========= Telegram WebApp =========
@@ -248,6 +273,9 @@
     const searchInput = document.getElementById("search");
     const btnRefresh = document.getElementById("btn-refresh");
     const btnSave = document.getElementById("btn-save");
+    const pagePrev = document.getElementById("page-prev");
+    const pageNext = document.getElementById("page-next");
+    const pageInfo = document.getElementById("page-info");
 
     if (!supplierId) {
       infoEl.textContent = "❌ Ошибка: supplier_id не передан в URL";
@@ -260,6 +288,8 @@
     let allProducts = [];
     let filteredProducts = [];
     let changed = new Map(); // id -> { id, price_min, price_max }
+    let pageSize = 200; // товаров на странице
+    let currentPage = 1;
 
     function setError(msg) {
       if (!msg) {
@@ -322,7 +352,9 @@
         inputMin.step = "0.01";
         inputMin.className = "price-input";
         inputMin.value = row.price_min != null ? row.price_min : "";
-        inputMin.addEventListener("input", () => onPriceChange(row.id, "price_min", inputMin.value));
+        inputMin.addEventListener("input", () =>
+          onPriceChange(row.id, "price_min", inputMin.value)
+        );
         tdMin.appendChild(inputMin);
         tr.appendChild(tdMin);
 
@@ -332,7 +364,9 @@
         inputMax.step = "0.01";
         inputMax.className = "price-input";
         inputMax.value = row.price_max != null ? row.price_max : "";
-        inputMax.addEventListener("input", () => onPriceChange(row.id, "price_max", inputMax.value));
+        inputMax.addEventListener("input", () =>
+          onPriceChange(row.id, "price_max", inputMax.value)
+        );
         tdMax.appendChild(inputMax);
         tr.appendChild(tdMax);
 
@@ -340,36 +374,77 @@
       }
     }
 
+    function renderPagination() {
+      const total = filteredProducts.length;
+      const pageCount = total === 0 ? 1 : Math.ceil(total / pageSize);
+
+      if (currentPage > pageCount) currentPage = pageCount;
+      if (currentPage < 1) currentPage = 1;
+
+      pageInfo.textContent = total === 0
+        ? "Страница 0 из 0"
+        : `Страница ${currentPage} из ${pageCount}`;
+
+      pagePrev.disabled = currentPage <= 1 || total === 0;
+      pageNext.disabled = currentPage >= pageCount || total === 0;
+    }
+
+    function renderCurrentPage() {
+      const total = filteredProducts.length;
+
+      if (total === 0) {
+        renderTable([]);
+        renderPagination();
+        setStatus("Нет товаров для отображения.");
+        return;
+      }
+
+      const pageCount = Math.ceil(total / pageSize);
+      if (currentPage > pageCount) currentPage = pageCount;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = filteredProducts.slice(start, end);
+
+      renderTable(pageData);
+      renderPagination();
+      setStatus(
+        `Показано <strong>${pageData.length}</strong> из ${filteredProducts.length} (всего в базе: ${allProducts.length})`
+      );
+    }
+
     function applyFilter() {
       const q = (searchInput.value || "").toLowerCase().trim();
       if (!q) {
         filteredProducts = allProducts.slice();
       } else {
-        filteredProducts = allProducts.filter(p =>
+        filteredProducts = allProducts.filter((p) =>
           (p.product_name || "").toLowerCase().includes(q)
         );
       }
-      renderTable(filteredProducts);
-      setStatus(`Показано <strong>${filteredProducts.length}</strong> из ${allProducts.length} товаров`);
+      currentPage = 1;
+      renderCurrentPage();
     }
 
     function onPriceChange(id, field, value) {
-      const num = value === "" ? null : Number(value.replace(",", "."));
-      const idx = allProducts.findIndex(p => p.id === id);
+      const num = value === "" ? null : Number(String(value).replace(",", "."));
+      const idx = allProducts.findIndex((p) => p.id === id);
       if (idx === -1) return;
 
       allProducts[idx][field] = num;
 
-      const current = changed.get(id) || {
-        id,
-        price_min: allProducts[idx].price_min,
-        price_max: allProducts[idx].price_max,
-      };
+      const current =
+        changed.get(id) || {
+          id,
+          price_min: allProducts[idx].price_min,
+          price_max: allProducts[idx].price_max,
+        };
       current[field] = num;
       changed.set(id, current);
 
       setSaveButtonState();
-      applyFilter();
+      renderCurrentPage();
     }
 
     async function loadProducts() {
@@ -384,7 +459,8 @@
           `${SUPABASE_URL}/rest/v1/products` +
           `?select=id,product_name,price_min,price_max` +
           `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
-          `&order=product_name.asc`;
+          `&order=product_name.asc` +
+          `&limit=5000`; // запас по количеству
 
         const res = await fetch(url, {
           headers: {
@@ -405,8 +481,6 @@
 
         if (data.length === 0) {
           setStatus("Для этого поставщика пока нет товаров.");
-        } else {
-          setStatus(`Загружено <strong>${data.length}</strong> товаров.`);
         }
 
         applyFilter();
@@ -428,7 +502,6 @@
       try {
         const items = Array.from(changed.values());
 
-        // Обновляем по одному — обычно изменяют немного позиций
         for (const item of items) {
           const url = `${SUPABASE_URL}/rest/v1/products?id=eq.${item.id}`;
           const body = {
@@ -449,7 +522,9 @@
 
           if (!res.ok) {
             const text = await res.text();
-            throw new Error(`Ошибка сохранения товара ${item.id} (${res.status}): ${text}`);
+            throw new Error(
+              `Ошибка сохранения товара ${item.id} (${res.status}): ${text}`
+            );
           }
         }
 
@@ -481,10 +556,29 @@
       }
     });
 
+    pagePrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderCurrentPage();
+      }
+    });
+
+    pageNext.addEventListener("click", () => {
+      const total = filteredProducts.length;
+      const pageCount = Math.ceil(total / pageSize);
+      if (currentPage < pageCount) {
+        currentPage++;
+        renderCurrentPage();
+      }
+    });
+
     // ========= Старт =========
     if (!supplierId) {
       setStatus("Нет supplier_id — редактирование недоступно.");
-    } else if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("ВСТАВЬ_")) {
+    } else if (
+      !SUPABASE_ANON_KEY ||
+      SUPABASE_ANON_KEY.startsWith("ВСТАВЬ_")
+    ) {
       setStatus("Заполните SUPABASE_ANON_KEY в index.html");
       setError("В коде WebApp нужно указать ваш PUBLIC ANON KEY Supabase.");
     } else {

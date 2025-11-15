@@ -456,19 +456,22 @@
 
       try {
         const url =
-          `${SUPABASE_URL}/rest/v1/products` +
-          `?select=id,product_name,price_min,price_max` +
-          `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
-          `&order=product_name.asc` +
-          `&limit=5000`; // запас по количеству
+  `${SUPABASE_URL}/rest/v1/products` +
+  `?select=id,product_name,price_min,price_max` +
+  `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
+  `&order=product_name.asc`;
+
 
         const res = await fetch(url, {
+  method: "GET",
   headers: {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    Range: "0-4999"   // Снимаем лимит Supabase в 1000 строк
-  },
+    Range: "0-4999",
+    "Prefer": "count=exact"
+  }
 });
+
 
 
         if (!res.ok) {
@@ -589,4 +592,5 @@
   </script>
 </body>
 </html>
+
 

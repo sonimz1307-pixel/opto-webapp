@@ -77,6 +77,11 @@
     .input::placeholder {
       color: #6b7280;
     }
+    .input-sm {
+      padding: 5px 8px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
     .btn {
       border-radius: 999px;
       border: none;
@@ -102,6 +107,12 @@
       opacity: 0.4;
       cursor: default;
     }
+    .btn-icon {
+      padding: 4px 8px;
+      font-size: 14px;
+      border-radius: 999px;
+      line-height: 1;
+    }
     .status {
       font-size: 11px;
       color: #9ca3af;
@@ -109,6 +120,19 @@
     }
     .status strong {
       color: #e5e7eb;
+    }
+    .add-form {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+    }
+    .add-form-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-right: 4px;
     }
     .table-wrap {
       margin-top: 12px;
@@ -147,10 +171,18 @@
     .name-cell {
       max-width: 340px;
     }
-    .name-text {
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
+    .name-input {
+      width: 100%;
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 3px 8px;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+    .name-input:focus {
+      border-color: #3b82f6;
+      outline: none;
     }
     .price-input {
       width: 80px;
@@ -204,6 +236,10 @@
       .price-input {
         width: 70px;
       }
+      .add-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
@@ -229,6 +265,32 @@
         </button>
       </div>
 
+      <!-- Добавление нового товара -->
+      <div class="add-form">
+        <span class="add-form-label">➕ Новый товар:</span>
+        <input
+          id="new-name"
+          class="input input-sm"
+          type="text"
+          placeholder="Название"
+        />
+        <input
+          id="new-price-min"
+          class="input input-sm"
+          type="number"
+          step="0.01"
+          placeholder="Мин. цена"
+        />
+        <input
+          id="new-price-max"
+          class="input input-sm"
+          type="number"
+          step="0.01"
+          placeholder="Макс. цена"
+        />
+        <button id="btn-add" class="btn btn-ghost">Создать</button>
+      </div>
+
       <div id="pagination">
         <button id="page-prev" class="btn btn-ghost">←</button>
         <span id="page-info">Страница 1 из 1</span>
@@ -246,6 +308,7 @@
               <th style="width:40%;">Наименование</th>
               <th>Мин. цена</th>
               <th>Макс. цена</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="tbody">
@@ -257,7 +320,7 @@
 
   <script>
     // ========= НАСТРОЙКИ SUPABASE =========
-    const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // такой же, как в боте
+    const SUPABASE_URL = "https://zlmtbaejzrsaarnercaz.supabase.co"; // как в боте
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXRiYWVqenJzYWFybmVyY2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjI3MTAsImV4cCI6MjA3ODI5ODcxMH0.aF9SuRPEmYpvPYFbbfl7pcCJc6MI_Acfxc6rRRrpuaM";
 
     // ========= Telegram WebApp =========
@@ -283,6 +346,11 @@
     const pageNext = document.getElementById("page-next");
     const pageInfo = document.getElementById("page-info");
 
+    const newNameInput = document.getElementById("new-name");
+    const newPriceMinInput = document.getElementById("new-price-min");
+    const newPriceMaxInput = document.getElementById("new-price-max");
+    const btnAdd = document.getElementById("btn-add");
+
     if (!supplierId) {
       infoEl.textContent = "❌ Ошибка: supplier_id не передан в URL";
       badgeEl.textContent = "—";
@@ -293,9 +361,10 @@
 
     let allProducts = [];
     let filteredProducts = [];
-    let changed = new Map(); // id -> { id, price_min, price_max }
+    let changed = new Map(); // id -> { id, product_name, price_min, price_max }
     let pageSize = 200; // товаров на странице
     let currentPage = 1;
+    const BATCH_SIZE = 1000;
 
     function setError(msg) {
       if (!msg) {
@@ -338,12 +407,18 @@
       for (const row of data) {
         const tr = document.createElement("tr");
 
+        // === Название (редактируемое) ===
         const tdName = document.createElement("td");
         tdName.className = "name-cell";
-        const nameDiv = document.createElement("div");
-        nameDiv.className = "name-text";
-        nameDiv.textContent = row.product_name || "(без названия)";
-        tdName.appendChild(nameDiv);
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "name-input";
+        nameInput.value = row.product_name || "";
+        nameInput.addEventListener("input", () =>
+          onNameChange(row.id, nameInput.value)
+        );
+        tdName.appendChild(nameInput);
+
         if (changed.has(row.id)) {
           const tag = document.createElement("span");
           tag.className = "tag-changed";
@@ -352,6 +427,7 @@
         }
         tr.appendChild(tdName);
 
+        // === Мин. цена ===
         const tdMin = document.createElement("td");
         const inputMin = document.createElement("input");
         inputMin.type = "number";
@@ -364,6 +440,7 @@
         tdMin.appendChild(inputMin);
         tr.appendChild(tdMin);
 
+        // === Макс. цена ===
         const tdMax = document.createElement("td");
         const inputMax = document.createElement("input");
         inputMax.type = "number";
@@ -375,6 +452,18 @@
         );
         tdMax.appendChild(inputMax);
         tr.appendChild(tdMax);
+
+        // === Действия (удаление) ===
+        const tdActions = document.createElement("td");
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn btn-ghost btn-icon";
+        delBtn.textContent = "🗑";
+        delBtn.title = "Удалить товар";
+        delBtn.addEventListener("click", () =>
+          onDeleteProduct(row.id, row.product_name)
+        );
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
 
         tbody.appendChild(tr);
       }
@@ -433,19 +522,51 @@
       renderCurrentPage();
     }
 
+    function getProductIndex(id) {
+      return allProducts.findIndex((p) => p.id === id);
+    }
+
+    function ensureChangedSnapshot(id) {
+      const idx = getProductIndex(id);
+      if (idx === -1) return null;
+
+      const base = allProducts[idx];
+      let current = changed.get(id);
+      if (!current) {
+        current = {
+          id: base.id,
+          product_name: base.product_name,
+          price_min: base.price_min,
+          price_max: base.price_max,
+        };
+      }
+      return current;
+    }
+
+    function onNameChange(id, value) {
+      const idx = getProductIndex(id);
+      if (idx === -1) return;
+
+      allProducts[idx].product_name = value;
+
+      const current = ensureChangedSnapshot(id);
+      if (!current) return;
+      current.product_name = value;
+      changed.set(id, current);
+
+      setSaveButtonState();
+      renderCurrentPage();
+    }
+
     function onPriceChange(id, field, value) {
       const num = value === "" ? null : Number(String(value).replace(",", "."));
-      const idx = allProducts.findIndex((p) => p.id === id);
+      const idx = getProductIndex(id);
       if (idx === -1) return;
 
       allProducts[idx][field] = num;
 
-      const current =
-        changed.get(id) || {
-          id,
-          price_min: allProducts[idx].price_min,
-          price_max: allProducts[idx].price_max,
-        };
+      const current = ensureChangedSnapshot(id);
+      if (!current) return;
       current[field] = num;
       changed.set(id, current);
 
@@ -454,15 +575,13 @@
     }
 
     // ========= Загрузка товаров пачками по 1000 =========
-    const BATCH_SIZE = 1000;
-
     async function fetchBatch(offset) {
       const from = offset;
       const to = offset + BATCH_SIZE - 1;
 
       const url =
         `${SUPABASE_URL}/rest/v1/products` +
-        `?select=id,product_name,price_min,price_max` +
+        `?select=id,product_name,price_min,price_max,supplier_id` +
         `&supplier_id=eq.${encodeURIComponent(supplierId)}` +
         `&order=product_name.asc`;
 
@@ -557,6 +676,7 @@
         for (const item of items) {
           const url = `${SUPABASE_URL}/rest/v1/products?id=eq.${item.id}`;
           const body = {
+            product_name: item.product_name,
             price_min: item.price_min,
             price_max: item.price_max,
           };
@@ -593,6 +713,114 @@
       }
     }
 
+    async function onDeleteProduct(id, name) {
+      const label = name || `ID ${id}`;
+      if (!confirm(`Удалить товар:\n"${label}"?`)) {
+        return;
+      }
+
+      try {
+        setError("");
+        setStatus(`Удаляю "${label}"...`);
+
+        const url = `${SUPABASE_URL}/rest/v1/products?id=eq.${id}`;
+        const res = await fetch(url, {
+          method: "DELETE",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            Prefer: "return=minimal",
+          }
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Ошибка удаления (${res.status}): ${text}`);
+        }
+
+        changed.delete(id);
+        setSaveButtonState();
+        setStatus(`Товар "${label}" удалён. Обновляю список...`);
+        await loadProducts();
+      } catch (err) {
+        console.error(err);
+        setError(String(err.message || err));
+        setStatus("Ошибка при удалении товара.");
+      }
+    }
+
+    async function onAddProduct() {
+      const name = (newNameInput.value || "").trim();
+      const pminStr = (newPriceMinInput.value || "").trim();
+      const pmaxStr = (newPriceMaxInput.value || "").trim();
+
+      if (!name) {
+        alert("Введите название товара");
+        return;
+      }
+
+      const pmin = pminStr ? Number(pminStr.replace(",", ".")) : null;
+      const pmax = pmaxStr ? Number(pmaxStr.replace(",", ".")) : null;
+
+      if (pmin == null && pmax == null) {
+        alert("Укажите хотя бы одну цену");
+        return;
+      }
+
+      let price_min = pmin;
+      let price_max = pmax;
+
+      if (price_min == null && price_max != null) price_min = price_max;
+      if (price_max == null && price_min != null) price_max = price_min;
+
+      if (!supplierId) {
+        alert("Нет supplier_id, создание товара невозможно.");
+        return;
+      }
+
+      try {
+        setError("");
+        setStatus("Создаю новый товар...");
+
+        const url = `${SUPABASE_URL}/rest/v1/products`;
+        const body = {
+          product_name: name,
+          price_min,
+          price_max,
+          supplier_id: Number(supplierId),
+          updated_at: new Date().toISOString(),
+        };
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Ошибка создания (${res.status}): ${text}`);
+        }
+
+        // очищаем форму
+        newNameInput.value = "";
+        newPriceMinInput.value = "";
+        newPriceMaxInput.value = "";
+
+        setStatus(`Товар "${name}" создан. Обновляю список...`);
+        await loadProducts();
+      } catch (err) {
+        console.error(err);
+        setError(String(err.message || err));
+        setStatus("Ошибка при создании товара.");
+      }
+    }
+
     // ========= События =========
     searchInput.addEventListener("input", () => {
       applyFilter();
@@ -622,6 +850,10 @@
         currentPage++;
         renderCurrentPage();
       }
+    });
+
+    btnAdd.addEventListener("click", () => {
+      onAddProduct();
     });
 
     // ========= Старт =========

@@ -156,6 +156,28 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // ==== ПРИЁМ ПРЕДЗАГРУЖЕННЫХ ДАННЫХ ====
+const urlParams = new URLSearchParams(window.location.search);
+let incoming = null;
+
+try {
+  if (urlParams.has("data")) {
+    incoming = JSON.parse(urlParams.get("data"));
+  }
+} catch (e) {
+    console.error("Ошибка JSON:", e);
+}
+
+if (incoming) {
+  document.getElementById("name").value = incoming.name || "";
+  document.getElementById("city").value = incoming.city || "";
+  document.getElementById("phone").value = incoming.phone || "";
+  document.getElementById("telegram").value = incoming.telegram || "";
+  document.getElementById("site").value = incoming.site || "";
+  document.getElementById("price_link").value = incoming.price_link || "";
+  document.getElementById("active").checked = incoming.active !== false;
+}
+
     // Кнопка поддержки
     document.getElementById("support_btn").onclick = function () {
       window.open("https://t.me/Polite009", "_blank");

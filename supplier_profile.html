@@ -8,13 +8,16 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 18px;
       background: #020617;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e5e7eb;
-      box-sizing: border-box;
     }
 
     h1 {
@@ -42,7 +45,6 @@
       background: #0f172a;
       color: #f1f5f9;
       font-size: 15px;
-      box-sizing: border-box;
     }
 
     .hint {
@@ -74,8 +76,20 @@
       border-radius: 12px;
       color: #fff;
       border: none;
-      margin-top: 12px;
-      box-sizing: border-box;
+      margin-top: 16px;
+    }
+
+    .button-secondary {
+      width: 100%;
+      display: block;
+      padding: 16px;
+      text-align: center;
+      font-size: 16px;
+      background: #1e293b;
+      border-radius: 12px;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      margin-top: 16px;
     }
   </style>
 
@@ -87,7 +101,7 @@
   <!-- Название -->
   <div class="field">
     <label>Название компании</label>
-    <input id="name" type="text" placeholder="Название вашей компании">
+    <input id="name" type="text" placeholder="Введите название компании">
   </div>
 
   <!-- Город -->
@@ -131,6 +145,9 @@
     <span>Готов принимать заказы</span>
   </div>
 
+  <!-- Кнопка поддержки -->
+  <div class="button-secondary" id="support_btn">✉️ Связаться с техподдержкой</div>
+
   <!-- Сохранить -->
   <div class="button-primary" id="save_btn">💾 Сохранить изменения</div>
 
@@ -139,7 +156,12 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // КНОПКА СОХРАНЕНИЯ
+    // Кнопка поддержки
+    document.getElementById("support_btn").onclick = function () {
+      window.open("https://t.me/Polite009", "_blank");
+    };
+
+    // Кнопка сохранения
     document.getElementById("save_btn").onclick = function () {
       const data = {
         action: "save_supplier_profile",

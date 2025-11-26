@@ -203,11 +203,14 @@
 
     // --- Подключение МойСклад ---
     document.getElementById("connect_moysklad_btn").onclick = function () {
-      const data = { action: "connect_moysklad" };
-      console.log("Отправляю в бота:", data);
-      tg.sendData(JSON.stringify(data));
-      setTimeout(() => tg.close(), 80);
-    };
+  const data = { action: "connect_moysklad" };
+  tg.sendData(JSON.stringify(data));
+
+  // Даем Telegram время перед закрытием окна
+  setTimeout(() => {
+    tg.close();
+  }, 150);
+};
 
     // --- Поддержка ---
     document.getElementById("support_btn").onclick = function () {

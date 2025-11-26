@@ -206,10 +206,6 @@
   const data = { action: "connect_moysklad" };
   tg.sendData(JSON.stringify(data));
 
-  // Даем Telegram время перед закрытием окна
-  setTimeout(() => {
-    tg.close();
-  }, 150);
 };
 
     // --- Поддержка ---

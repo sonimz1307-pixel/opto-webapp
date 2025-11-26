@@ -324,7 +324,7 @@
     </div>
 
     <div class="cards-grid">
-      <!-- Профиль поставщика -->
+
       <section class="card" id="card-profile">
         <div class="card-header">
           <div>
@@ -381,7 +381,7 @@
         </div>
       </section>
 
-      <!-- МойСклад: подключение -->
+
       <section class="card" id="card-moy">
         <div class="card-header">
           <div>
@@ -427,6 +427,7 @@
           Если ничего не происходит, вернитесь в чат с ботом и отправьте команду <b>/start</b>, затем откройте профиль снова.
         </div>
       </section>
+
     </div>
   </div>
 
@@ -437,7 +438,6 @@
       tg.ready();
     }
 
-    // --- элементы профиля ---
     const fldName     = document.getElementById('fld-name');
     const fldCity     = document.getElementById('fld-city');
     const fldCategory = document.getElementById('fld-category');
@@ -458,16 +458,12 @@
     const btnSave   = document.getElementById('btn-save');
     const btnCancel = document.getElementById('btn-cancel');
 
-    // --- МойСклад ---
     const btnConnectMoy = document.getElementById('btn-connect-moy');
     const statusMoyDot  = document.getElementById('status-moy-dot');
     const statusMoyText = document.getElementById('status-moy-text');
 
-    let originalProfile = null;   // чтобы можно было откатить изменения
+    let originalProfile = null;
 
-    // ===========================
-    //  Разбор параметра ?data=
-    // ===========================
     function loadProfileFromQuery() {
       try {
         const url = new URL(window.location.href);
@@ -480,6 +476,7 @@
         const decoded = decodeURIComponent(dataStr);
         const obj = JSON.parse(decoded);
         originalProfile = obj;
+        window.profileData = obj;
 
         fldName.value     = obj.name || '';
         fldCity.value     = obj.city || '';
@@ -506,7 +503,6 @@
           badgeVerifiedDot.classList.add('badge-dot-warn');
         }
 
-        // --- статус по МойСклад ---
         const moyLinked   = !!obj.moy_linked;
         const moyAccount  = obj.moy_account_id || null;
 
@@ -538,11 +534,7 @@
 
     loadProfileFromQuery();
 
-    // ===========================
-    //  Сохранение профиля
-    // ===========================
     function setProfileStatus(type, text) {
-      // type: 'neutral' | 'loading' | 'ok' | 'error'
       let dot = statusProfile.querySelector('span');
       let msg = statusProfile.querySelectorAll('span')[1];
 
@@ -588,7 +580,6 @@
     });
 
     btnCancel.addEventListener('click', () => {
-      // Обновляем поля из оригинального ?data
       if (originalProfile) {
         fldName.value     = originalProfile.name || '';
         fldCity.value     = originalProfile.city || '';
@@ -600,18 +591,18 @@
       setProfileStatus('neutral', 'Изменения сброшены, профиль восстановлен.');
     });
 
-    // ===========================
-    //  Подключение МойСклад
-    // ===========================
+
+    /* 🔥 НОВЫЙ ОБРАБОТЧИК МОЙСКЛАД — ТВОЯ ПРОСЬБА */
     let connecting = false;
 
     function setMoyStatus(type, text) {
-      // type: 'neutral' | 'loading' | 'ok' | 'error'
       statusMoyDot.className = '';
       if (type === 'loading') {
         statusMoyDot.classList.add('status-dot-loading');
       } else if (type === 'ok') {
         statusMoyDot.classList.add('status-dot-ok');
+      } else if (type === 'error') {
+        statusMoyDot.classList.add('badge-dot-warn');
       } else {
         statusMoyDot.classList.add('status-dot-neutral');
       }
@@ -631,7 +622,10 @@
       setMoyStatus('loading', 'Отправляю запрос на привязку МойСклад к вашему Telegram...');
 
       try {
-        tg.sendData(JSON.stringify({ action: 'connect_moysklad' }));
+        tg.sendData(JSON.stringify({
+          action: 'connect_moysklad',
+          moy_account_id: window.profileData?.moy_account_id || null
+        }));
       } catch (e) {
         console.error(e);
         setMoyStatus('error', 'Не удалось отправить запрос. Попробуйте ещё раз.');
@@ -640,7 +634,6 @@
         return;
       }
 
-      // Мы не ждём ответа от сервера напрямую — поэтому просто показываем понятный UX
       setTimeout(() => {
         setMoyStatus(
           'ok',
@@ -653,6 +646,7 @@
         btnConnectMoy.disabled = false;
       }, 2000);
     });
+
   </script>
 </body>
 </html>

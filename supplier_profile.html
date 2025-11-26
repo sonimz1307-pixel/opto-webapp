@@ -365,6 +365,7 @@
           <div class="chips-row" id="chips-row">
             <div class="chip" id="chip-chz">ЧЗ / ЭДО: нет данных</div>
             <div class="chip" id="chip-id">ID поставщика: —</div>
+            <div class="chip" id="chip-ms">МойСклад: не подключен</div>
           </div>
         </div>
 
@@ -412,9 +413,9 @@
         <div class="steps">
           <div class="steps-title">Как это работает:</div>
           <ol>
-            <li>Нажмите «Подключить МойСклад» — бот привяжет ваш Telegram.</li>
-            <li>В чате с ботом появится сообщение с инструкцией.</li>
-            <li>Далее установите приложение OptoVizor в интерфейсе МойСклад (раздел «Приложения»).</li>
+            <li>Нажмите «Подключить МойСклад» — бот привяжет ваш Telegram к аккаунту МойСклад.</li>
+            <li>В чате с ботом появится сообщение с результатом.</li>
+            <li>Если приложение ещё не установлено — зайдите в раздел «Приложения» в МойСклад и установите OptoVizor.</li>
           </ol>
         </div>
 
@@ -446,9 +447,9 @@
 
     const chipChz  = document.getElementById('chip-chz');
     const chipId   = document.getElementById('chip-id');
+    const chipMs   = document.getElementById('chip-ms');
     const subtitle = document.getElementById('subtitle');
 
-    const badgeVerified     = document.getElementById('badge-verified');
     const badgeVerifiedDot  = document.getElementById('badge-verified-dot');
     const badgeVerifiedText = document.getElementById('badge-verified-text');
 
@@ -458,10 +459,11 @@
     const btnCancel = document.getElementById('btn-cancel');
 
     // --- МойСклад ---
-    const btnConnectMoy   = document.getElementById('btn-connect-moy');
-    const statusMoy       = document.getElementById('status-moy');
-    const statusMoyDot    = document.getElementById('status-moy-dot');
-    const statusMoyText   = document.getElementById('status-moy-text');
+    const btnConnectMoy = document.getElementById('btn-connect-moy');
+    const statusMoyDot  = document.getElementById('status-moy-dot');
+    const statusMoyText = document.getElementById('status-moy-text');
+
+    let originalProfile = null;   // чтобы можно было откатить изменения
 
     // ===========================
     //  Разбор параметра ?data=
@@ -477,6 +479,7 @@
 
         const decoded = decodeURIComponent(dataStr);
         const obj = JSON.parse(decoded);
+        originalProfile = obj;
 
         fldName.value     = obj.name || '';
         fldCity.value     = obj.city || '';
@@ -503,6 +506,28 @@
           badgeVerifiedDot.classList.add('badge-dot-warn');
         }
 
+        // --- статус по МойСклад ---
+        const moyLinked   = !!obj.moy_linked;
+        const moyAccount  = obj.moy_account_id || null;
+
+        if (moyLinked) {
+          chipMs.textContent = 'МойСклад: подключен';
+          chipMs.style.borderStyle = 'solid';
+          statusMoyDot.className = '';
+          statusMoyDot.classList.add('status-dot-ok');
+          statusMoyText.textContent = moyAccount
+            ? `МойСклад привязан (account_id заканчивается на ...${String(moyAccount).slice(-6)})`
+            : 'МойСклад привязан к вашему Telegram.';
+          btnConnectMoy.textContent = '🔄 Переподключить МойСклад';
+        } else {
+          chipMs.textContent = 'МойСклад: не подключен';
+          chipMs.style.borderStyle = 'dashed';
+          statusMoyDot.className = '';
+          statusMoyDot.classList.add('status-dot-neutral');
+          statusMoyText.textContent = 'МойСклад ещё не привязан к вашему Telegram.';
+          btnConnectMoy.textContent = '🔗 Подключить МойСклад';
+        }
+
         subtitle.textContent = `ID: ${idVal === '—' ? 'не назначен' : idVal}`;
 
       } catch (e) {
@@ -526,8 +551,6 @@
         dot.classList.add('status-dot-loading');
       } else if (type === 'ok') {
         dot.classList.add('status-dot-ok');
-      } else if (type === 'error') {
-        dot.classList.add('status-dot-neutral');
       } else {
         dot.classList.add('status-dot-neutral');
       }
@@ -566,7 +589,14 @@
 
     btnCancel.addEventListener('click', () => {
       // Обновляем поля из оригинального ?data
-      loadProfileFromQuery();
+      if (originalProfile) {
+        fldName.value     = originalProfile.name || '';
+        fldCity.value     = originalProfile.city || '';
+        fldCategory.value = originalProfile.category || '';
+        fldPhone.value    = originalProfile.phone || '';
+        fldTelegram.value = originalProfile.telegram || '';
+        fldSite.value     = originalProfile.site || '';
+      }
       setProfileStatus('neutral', 'Изменения сброшены, профиль восстановлен.');
     });
 
@@ -582,8 +612,6 @@
         statusMoyDot.classList.add('status-dot-loading');
       } else if (type === 'ok') {
         statusMoyDot.classList.add('status-dot-ok');
-      } else if (type === 'error') {
-        statusMoyDot.classList.add('status-dot-neutral');
       } else {
         statusMoyDot.classList.add('status-dot-neutral');
       }
@@ -612,7 +640,7 @@
         return;
       }
 
-      // Мы не ждём ответа от сервера напрямую — поэтому показываем понятный UX
+      // Мы не ждём ответа от сервера напрямую — поэтому просто показываем понятный UX
       setTimeout(() => {
         setMoyStatus(
           'ok',

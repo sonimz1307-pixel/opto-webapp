@@ -203,10 +203,9 @@
 
     // --- Подключение МойСклад ---
     document.getElementById("connect_moysklad_btn").onclick = function () {
-  const data = { action: "connect_moysklad" };
-  tg.sendData(JSON.stringify(data));
-
-};
+      const data = { action: "connect_moysklad" };
+      tg.sendData(JSON.stringify(data));
+    };
 
     // --- Поддержка ---
     document.getElementById("support_btn").onclick = function () {
@@ -228,6 +227,8 @@
 
       console.log("Отправляю в бота:", data);
       tg.sendData(JSON.stringify(data));
+
+      // сохранить → закрыть
       setTimeout(() => tg.close(), 80);
     };
   </script>

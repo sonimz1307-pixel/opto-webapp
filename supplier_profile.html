@@ -162,6 +162,11 @@
     🔗 Подключить МойСклад
   </button>
 
+  <!-- DEBUG: тест кнопка -->
+  <button id="debug_btn" class="button-secondary">
+    🧪 DEBUG BRIDGE
+  </button>
+
   <!-- 1С -->
   <div class="button-secondary button-disabled">
     📦 Подключить 1С (скоро)
@@ -181,17 +186,17 @@
   <script>
     const tg = window.Telegram.WebApp;
 
-    /* === КРИТИЧЕСКОЕ ДЛЯ TELEGRAM DESKTOP === */
+    // === КРИТИЧЕСКОЕ ДЛЯ TELEGRAM DESKTOP ===
     tg.ready();
     tg.expand();
     tg.enableClosingConfirmation();
 
-    // Принудительная активация WebView bridge
+    // Принудительно дёргаем MainButton, чтобы разбудить bridge на Desktop
     tg.MainButton.setText("OK");
     tg.MainButton.show();
     setTimeout(() => tg.MainButton.hide(), 200);
 
-    /* ==== Приём предзагруженных данных ==== */
+    // ==== Приём предзагруженных данных ====
     const urlParams = new URLSearchParams(window.location.search);
     let incoming = null;
 
@@ -213,7 +218,7 @@
       document.getElementById("active").checked = incoming.active !== false;
     }
 
-    /* ==== Кнопка МойСклад ==== */
+    // ==== Кнопка МойСклад ====
     const connectBtn = document.getElementById("connect_moysklad_btn");
     connectBtn.setAttribute("role", "button");
     connectBtn.style.cursor = "pointer";
@@ -224,12 +229,26 @@
       tg.sendData(JSON.stringify(data));
     });
 
-    /* ==== Поддержка ==== */
+    // ==== DEBUG-кнопка: проверка bridge ====
+    const debugBtn = document.getElementById("debug_btn");
+    debugBtn.setAttribute("role", "button");
+    debugBtn.style.cursor = "pointer";
+
+    debugBtn.addEventListener("click", () => {
+      console.log("CLICK → DEBUG");
+      try {
+        tg.showAlert("Bridge OK!");
+      } catch (e) {
+        console.log("tg.showAlert ERROR:", e);
+      }
+    });
+
+    // ==== Поддержка ====
     document.getElementById("support_btn").onclick = function () {
       window.open("https://t.me/Polite009", "_blank");
     };
 
-    /* ==== Сохранить ==== */
+    // ==== Сохранить ====
     document.getElementById("save_btn").onclick = function () {
       const data = {
         action: "save_supplier_profile",

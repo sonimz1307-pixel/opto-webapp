@@ -26,6 +26,13 @@
       font-weight: 600;
     }
 
+    h2 {
+      font-size: 18px;
+      margin: 32px 0 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
     .field {
       margin-bottom: 22px;
       display: flex;
@@ -65,31 +72,34 @@
       font-size: 15px;
     }
 
-    .button-primary {
-      width: 100%;
-      display: block;
-      padding: 16px;
-      text-align: center;
-      font-size: 17px;
-      font-weight: 600;
-      background: #4f46e5;
-      border-radius: 12px;
-      color: #fff;
-      border: none;
-      margin-top: 16px;
-    }
-
+    .button-primary,
     .button-secondary {
       width: 100%;
       display: block;
       padding: 16px;
       text-align: center;
       font-size: 16px;
-      background: #1e293b;
       border-radius: 12px;
+      margin-top: 16px;
+      user-select: none;
+    }
+
+    .button-primary {
+      font-weight: 600;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+    }
+
+    .button-secondary {
+      background: #1e293b;
       color: #e2e8f0;
       border: 1px solid #334155;
-      margin-top: 16px;
+    }
+
+    .button-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
   </style>
 
@@ -145,45 +155,71 @@
     <span>Готов принимать заказы</span>
   </div>
 
+  <!-- 🔷 Интеграции -->
+  <h2>Интеграции</h2>
+
+  <!-- Подключить МойСклад -->
+  <div class="button-secondary" id="connect_moysklad_btn" style="border-color:#475569;color:#f1f5f9;">
+    🔗 Подключить МойСклад
+  </div>
+
+  <!-- 1С -->
+  <div class="button-secondary button-disabled">
+    📦 Подключить 1С (скоро)
+  </div>
+
+  <!-- B2B -->
+  <div class="button-secondary button-disabled">
+    🛒 Подключить B2B кабинет (скоро)
+  </div>
+
   <!-- Кнопка поддержки -->
   <div class="button-secondary" id="support_btn">✉️ Связаться с техподдержкой</div>
 
   <!-- Сохранить -->
   <div class="button-primary" id="save_btn">💾 Сохранить изменения</div>
 
-
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
     // ==== ПРИЁМ ПРЕДЗАГРУЖЕННЫХ ДАННЫХ ====
-const urlParams = new URLSearchParams(window.location.search);
-let incoming = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    let incoming = null;
 
-try {
-  if (urlParams.has("data")) {
-    incoming = JSON.parse(urlParams.get("data"));
-  }
-} catch (e) {
-    console.error("Ошибка JSON:", e);
-}
+    try {
+      if (urlParams.has("data")) {
+        incoming = JSON.parse(urlParams.get("data"));
+      }
+    } catch (e) {
+      console.error("Ошибка JSON:", e);
+    }
 
-if (incoming) {
-  document.getElementById("name").value = incoming.name || "";
-  document.getElementById("city").value = incoming.city || "";
-  document.getElementById("phone").value = incoming.phone || "";
-  document.getElementById("telegram").value = incoming.telegram || "";
-  document.getElementById("site").value = incoming.site || "";
-  document.getElementById("price_link").value = incoming.price_link || "";
-  document.getElementById("active").checked = incoming.active !== false;
-}
+    if (incoming) {
+      document.getElementById("name").value = incoming.name || "";
+      document.getElementById("city").value = incoming.city || "";
+      document.getElementById("phone").value = incoming.phone || "";
+      document.getElementById("telegram").value = incoming.telegram || "";
+      document.getElementById("site").value = incoming.site || "";
+      document.getElementById("price_link").value = incoming.price_link || "";
+      document.getElementById("active").checked = incoming.active !== false;
+    }
 
-    // Кнопка поддержки
+    // --- Подключение МойСклад ---
+    document.getElementById("connect_moysklad_btn").onclick = function () {
+      const data = {
+        action: "connect_moysklad"
+      };
+      tg.sendData(JSON.stringify(data));
+      tg.close();
+    };
+
+    // --- Поддержка ---
     document.getElementById("support_btn").onclick = function () {
       window.open("https://t.me/Polite009", "_blank");
     };
 
-    // Кнопка сохранения
+    // --- Сохранить ---
     document.getElementById("save_btn").onclick = function () {
       const data = {
         action: "save_supplier_profile",

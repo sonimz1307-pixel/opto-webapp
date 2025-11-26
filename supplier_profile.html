@@ -78,6 +78,7 @@
       border-radius: 12px;
       margin-top: 16px;
       user-select: none;
+      cursor: pointer;
     }
 
     .button-primary {
@@ -155,12 +156,9 @@
   <h2>Интеграции</h2>
 
   <!-- Подключить МойСклад -->
-  <button 
-  id="connect_moysklad_btn"
-  class="button-secondary"
-  style="border-color:#475569;color:#f1f5f9; cursor:pointer; width:100%; display:block;">
-  🔗 Подключить МойСклад
-</button>
+  <button id="connect_moysklad_btn" class="button-secondary" style="border-color:#475569;color:#f1f5f9;">
+    🔗 Подключить МойСклад
+  </button>
 
   <!-- 1С -->
   <div class="button-secondary button-disabled">
@@ -180,7 +178,11 @@
 
   <script>
     const tg = window.Telegram.WebApp;
+
+    // Важно! Telegram Desktop не будет принимать клики, пока WebApp не активирован
+    tg.ready();
     tg.expand();
+    tg.MainButton.hide();
 
     // ==== ПРИЁМ ПРЕДЗАГРУЖЕННЫХ ДАННЫХ ====
     const urlParams = new URLSearchParams(window.location.search);
@@ -205,10 +207,14 @@
     }
 
     // --- Подключение МойСклад ---
-    document.getElementById("connect_moysklad_btn").onclick = function () {
+    const connectBtn = document.getElementById("connect_moysklad_btn");
+    connectBtn.setAttribute("role", "button");
+    connectBtn.style.cursor = "pointer";
+
+    connectBtn.addEventListener("click", () => {
       const data = { action: "connect_moysklad" };
       tg.sendData(JSON.stringify(data));
-    };
+    });
 
     // --- Поддержка ---
     document.getElementById("support_btn").onclick = function () {
@@ -228,10 +234,7 @@
         active: document.getElementById("active").checked
       };
 
-      console.log("Отправляю в бота:", data);
       tg.sendData(JSON.stringify(data));
-
-      // сохранить → закрыть
       setTimeout(() => tg.close(), 80);
     };
   </script>

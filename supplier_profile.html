@@ -404,6 +404,21 @@
           </div>
         </div>
 
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Склад для синхронизации</div>
+            <select id="store-select" class="input">
+              <option value="all">Все склады</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-save-store">
+            💾 Сохранить склад
+          </button>
+        </div>
+
         <div class="btn-row">
           <button class="btn btn-primary" id="btn-connect-moy">
             🔗 Подключить МойСклад
@@ -461,6 +476,9 @@
     const btnConnectMoy = document.getElementById('btn-connect-moy');
     const statusMoyDot  = document.getElementById('status-moy-dot');
     const statusMoyText = document.getElementById('status-moy-text');
+
+    const storeSelect   = document.getElementById('store-select');
+    const btnSaveStore  = document.getElementById('btn-save-store');
 
     let originalProfile = null;
 
@@ -526,6 +544,8 @@
 
         subtitle.textContent = `ID: ${idVal === '—' ? 'не назначен' : idVal}`;
 
+        fillStoreList();
+
       } catch (e) {
         console.error('parse profile error', e);
         subtitle.textContent = 'Не удалось прочитать данные профиля.';
@@ -533,6 +553,33 @@
     }
 
     loadProfileFromQuery();
+
+    function fillStoreList() {
+      if (!storeSelect) return;
+
+      const data = window.profileData || {};
+      const stores = Array.isArray(data.stores) ? data.stores : [];
+      const defaultStoreId = data.default_store_id || null;
+
+      // очистить, оставить только "Все склады"
+      while (storeSelect.options.length > 1) {
+        storeSelect.remove(1);
+      }
+
+      stores.forEach((s) => {
+        if (!s || !s.id || !s.name) return;
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        storeSelect.appendChild(opt);
+      });
+
+      if (defaultStoreId) {
+        storeSelect.value = defaultStoreId;
+      } else {
+        storeSelect.value = 'all';
+      }
+    }
 
     function setProfileStatus(type, text) {
       let dot = statusProfile.querySelector('span');
@@ -590,6 +637,29 @@
       }
       setProfileStatus('neutral', 'Изменения сброшены, профиль восстановлен.');
     });
+
+
+    if (btnSaveStore && storeSelect) {
+      btnSaveStore.addEventListener('click', () => {
+        if (!tg) {
+          alert('Откройте этот экран из Telegram-бота.');
+          return;
+        }
+
+        const storeId = storeSelect.value || 'all';
+
+        try {
+          tg.sendData(JSON.stringify({
+            action: 'set_moysklad_store',
+            store_id: storeId
+          }));
+          alert('Выбор склада отправлен в бот. Откройте чат и дождитесь подтверждения.');
+        } catch (e) {
+          console.error(e);
+          alert('Не удалось отправить выбор склада. Попробуйте ещё раз.');
+        }
+      });
+    }
 
 
     /* 🔥 НОВЫЙ ОБРАБОТЧИК МОЙСКЛАД — ТВОЯ ПРОСЬБА */

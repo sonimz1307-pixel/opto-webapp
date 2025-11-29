@@ -1,305 +1,722 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OptoVizor — Профиль</title>
+  <meta charset="UTF-8" />
+  <title>Профиль оптовика — OptoVizor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    :root {
+      --bg: #020617;
+      --bg-elevated: #020617;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.1);
+      --danger: #f97373;
+      --border: #1f2937;
+      --card-radius: 20px;
+      --input-bg: #020617;
+      --shadow-soft: 0 18px 45px rgba(0,0,0,0.35);
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 40%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap {
+      min-height: 100vh;
+      padding: 18px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill {
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    }
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0d1220;
-            color: #ffffff;
-            font-family: "Inter", sans-serif;
-        }
+    .cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .card {
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.12) 0, rgba(15,23,42,0.96) 38%, #020617 75%);
+      border-radius: var(--card-radius);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 14px 14px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .card-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.3);
+      background: rgba(15,23,42,0.9);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .badge-dot-ok {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+    .badge-dot-warn {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fbbf24;
+    }
 
-        .container {
-            padding: 18px;
-        }
+    .form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .input {
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.95);
+      color: var(--text);
+      outline: none;
+    }
+    .input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+    }
+    .input::placeholder {
+      color: #6b7280;
+    }
 
-        .card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 18px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px dashed rgba(148,163,184,0.4);
+      color: var(--muted);
+    }
 
-        .card h2 {
-            margin: 0 0 14px 0;
-            font-size: 18px;
-            letter-spacing: 0.3px;
-        }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn {
+      flex: 1;
+      font-size: 13px;
+      border-radius: 999px;
+      padding: 9px 12px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease, opacity 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: white;
+      box-shadow: 0 12px 30px rgba(34,197,94,0.35);
+    }
+    .btn-primary:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 7px 18px rgba(34,197,94,0.45);
+    }
+    .btn-soft {
+      background: rgba(15,23,42,0.9);
+      color: var(--muted);
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 10px 28px rgba(15,23,42,0.9);
+    }
+    .btn-soft:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 6px 16px rgba(15,23,42,0.9);
+    }
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
 
-        .input-field {
-            margin-bottom: 12px;
-        }
+    .status-line {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 16px;
+      white-space: pre-line;
+    }
+    .status-dot-loading {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      border-top-color: transparent;
+      animation: spin 0.8s linear infinite;
+    }
+    .status-dot-ok {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+    .status-dot-neutral {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #6b7280;
+    }
 
-        .input-field label {
-            font-size: 13px;
-            opacity: 0.8;
-        }
+    .steps {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15,23,42,0.95);
+      border: 1px dashed rgba(148,163,184,0.45);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .steps-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+    .steps ol {
+      padding-left: 16px;
+      margin: 0;
+    }
+    .steps li {
+      margin-bottom: 3px;
+    }
 
-        .input-field input, .input-field select {
-            width: 100%;
-            margin-top: 6px;
-            padding: 10px;
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            border: none;
-            outline: none;
-            border-radius: 8px;
-        }
+    .link-btn {
+      margin-top: 8px;
+      font-size: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--text);
+      background: rgba(15,23,42,0.95);
+    }
 
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: #1d9dff;
-            border: none;
-            color: white;
-            font-size: 15px;
-            border-radius: 10px;
-            margin-top: 12px;
-        }
+    .footer-hint {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      opacity: 0.85;
+    }
 
-        /* ———————————————— АККОРДЕОН ———————————————— */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        .accordion-item {
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            margin-bottom: 14px;
-            border: 1px solid rgba(255,255,255,0.06);
-            overflow: hidden;
-        }
-
-        .accordion-header {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: none;
-            color: #fff;
-            padding: 14px 16px;
-            font-size: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .accordion-body {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.28s ease-in-out;
-            padding: 0 16px;
-        }
-
-        .accordion-item.open .accordion-body {
-            max-height: 1200px;
-            padding: 16px;
-        }
-
-        .arrow {
-            transition: transform 0.25s;
-        }
-
-        .accordion-item.open .arrow {
-            transform: rotate(180deg);
-        }
-
-        /* ———————————————— КРАСИВАЯ КНОПКА-СЫЛКА ———————————————— */
-
-        .link-button {
-            display: inline-block;
-            background: rgba(255,255,255,0.08);
-            color: #ffffff;
-            padding: 10px 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 14px;
-            margin-top: 10px;
-            transition: 0.2s;
-        }
-
-        .link-button:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        /* ————— текущие стили твоего блока МойСклад ————— */
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .green { background: #4ee48f; }
-        .red { background: #ff5d5d; }
-
-    </style>
+    @media (min-width: 768px) {
+      .wrap {
+        max-width: 520px;
+        margin: 0 auto;
+      }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="wrap">
+    <div class="header">
+      <div class="title-block">
+        <div class="title">Профиль оптовика</div>
+        <div class="subtitle" id="subtitle">
+          Загружаю данные профиля...
+        </div>
+      </div>
+      <div class="pill">
+        <span class="pill-dot"></span>
+        через Telegram-бота
+      </div>
+    </div>
 
-    <!-- —————————————— КАРТОЧКА ПРОФИЛЯ —————————————— -->
+    <div class="cards-grid">
 
-    <div class="card">
-        <h2>Основная информация</h2>
-
-        <div class="input-field">
-            <label>Название компании</label>
-            <input id="fldName">
+      <section class="card" id="card-profile">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Основная информация</div>
+            <div class="card-sub">Данные видят клиенты в карточке поставщика</div>
+          </div>
+          <div class="badge" id="badge-verified">
+            <span class="badge-dot-warn" id="badge-verified-dot"></span>
+            <span id="badge-verified-text">Ожидает подтверждения</span>
+          </div>
         </div>
 
-        <div class="input-field">
-            <label>Город</label>
-            <input id="fldCity">
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Название компании</div>
+            <input id="fld-name" class="input" placeholder="ООО «Компания»" />
+          </div>
+          <div class="field">
+            <div class="label">Город</div>
+            <input id="fld-city" class="input" placeholder="Москва" />
+          </div>
+          <div class="field">
+            <div class="label">Категория товара</div>
+            <input id="fld-category" class="input" placeholder="Vape, косметика, спортпит..." />
+          </div>
+          <div class="field">
+            <div class="label">Телефон</div>
+            <input id="fld-phone" class="input" placeholder="+7..." />
+          </div>
+          <div class="field">
+            <div class="label">Telegram для связи</div>
+            <input id="fld-telegram" class="input" placeholder="@username" />
+          </div>
+          <div class="field">
+            <div class="label">Сайт / ссылка</div>
+            <input id="fld-site" class="input" placeholder="https://..." />
+          </div>
+          <div class="chips-row" id="chips-row">
+            <div class="chip" id="chip-chz">ЧЗ / ЭДО: нет данных</div>
+            <div class="chip" id="chip-id">ID поставщика: —</div>
+            <div class="chip" id="chip-ms">МойСклад: не подключен</div>
+          </div>
         </div>
 
-        <div class="input-field">
-            <label>Категория</label>
-            <select id="fldCategory">
-                <option value="Вейп">Вейп</option>
-                <option value="Жидкости">Жидкости</option>
-                <option value="FMCG">FMCG</option>
+        <div class="btn-row">
+          <button class="btn btn-soft" id="btn-cancel">Отмена</button>
+          <button class="btn btn-primary" id="btn-save">
+            💾 Сохранить профиль
+          </button>
+        </div>
+        <div class="status-line" id="status-profile">
+          <span class="status-dot-neutral"></span>
+          <span>Изменения пока не отправлялись.</span>
+        </div>
+      </section>
+
+
+      <section class="card" id="card-moy">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Интеграция с МойСклад</div>
+            <div class="card-sub">Подключите синхронизацию остатков и прайсов</div>
+          </div>
+          <div class="badge">
+            <span class="badge-dot-ok" id="badge-moy-dot"></span>
+            <span id="badge-moy-text">Через бота</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Статус подключения</div>
+            <div class="status-line" id="status-moy">
+              <span class="status-dot-neutral" id="status-moy-dot"></span>
+              <span id="status-moy-text">МойСклад ещё не привязан к вашему Telegram.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Склад для синхронизации</div>
+            <select id="store-select" class="input">
+              <option value="all">Все склады</option>
             </select>
+          </div>
         </div>
 
-        <div class="input-field">
-            <label>Телефон</label>
-            <input id="fldPhone">
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-save-store">
+            💾 Сохранить склад
+          </button>
         </div>
 
-        <div class="input-field">
-            <label>Telegram</label>
-            <input id="fldTelegram">
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-connect-moy">
+            🔗 Подключить МойСклад
+          </button>
         </div>
 
-        <div class="input-field">
-            <label>Сайт</label>
-            <input id="fldSite">
+        <div class="steps">
+          <div class="steps-title">Как это работает:</div>
+          <ol>
+            <li>Нажмите «Подключить МойСклад» — бот привяжет ваш Telegram к аккаунту МойСклад.</li>
+            <li>В чате с ботом появится сообщение с результатом.</li>
+            <li>Если приложение ещё не установлено — зайдите в раздел «Приложения» в МойСклад и установите OptoVizor.</li>
+          </ol>
         </div>
 
-        <button class="btn" onclick="saveProfile()">Сохранить профиль</button>
-
-        <a href="https://sonimz1307-pixel.github.io/optovizor-moysklad-instruction/company.html"
-           target="_blank"
-           class="link-button">
-            🌐 Открыть сайт OptoVizor
+        <a href="https://online.moysklad.ru/" target="_blank" class="link-btn">
+          Открыть МойСклад
         </a>
-    </div>
 
-    <!-- ————————————— КАРТОЧКА ИНТЕГРАЦИЙ ————————————— -->
-
-    <div class="card">
-        <h2>Интеграции</h2>
-
-        <!-- ————————— МойСклад ————————— -->
-
-        <div class="accordion-item">
-            <button class="accordion-header">
-                <span>МойСклад — Интеграция</span>
-                <span class="arrow">▼</span>
-            </button>
-
-            <div class="accordion-body">
-
-                <!-- Твой оригинальный блок МойСклад (НЕ ИЗМЕНЁН) -->
-                <div id="moyskladBlock">
-
-                    <p>Статус подключения:</p>
-                    <p id="msStatus">Загрузка...</p>
-
-                    <div class="input-field">
-                        <label>Склад</label>
-                        <select id="fldStore"></select>
-                    </div>
-
-                    <button class="btn" onclick="saveStore()">Сохранить склад</button>
-
-                    <button class="btn" onclick="reconnectMS()" style="background:#37d67a;">
-                        Переподключить МойСклад
-                    </button>
-
-                </div>
-
-            </div>
+        <div class="footer-hint">
+          Если ничего не происходит, вернитесь в чат с ботом и отправьте команду <b>/start</b>, затем откройте профиль снова.
         </div>
-
-        <!-- ————————— 1С ————————— -->
-
-        <div class="accordion-item">
-            <button class="accordion-header">
-                <span>1С — Интеграция</span>
-                <span class="arrow">▼</span>
-            </button>
-
-            <div class="accordion-body">
-                <p>Интеграция с 1С появится скоро 👀</p>
-            </div>
-        </div>
-
-        <!-- ————————— Ozon ————————— -->
-
-        <div class="accordion-item">
-            <button class="accordion-header">
-                <span>Ozon — Интеграция</span>
-                <span class="arrow">▼</span>
-            </button>
-
-            <div class="accordion-body">
-                <p>Интеграция с Ozon появится позже</p>
-            </div>
-        </div>
+      </section>
 
     </div>
+  </div>
 
-</div>
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
 
-<!-- ————————————— JS ————————————— -->
+    const fldName     = document.getElementById('fld-name');
+    const fldCity     = document.getElementById('fld-city');
+    const fldCategory = document.getElementById('fld-category');
+    const fldPhone    = document.getElementById('fld-phone');
+    const fldTelegram = document.getElementById('fld-telegram');
+    const fldSite     = document.getElementById('fld-site');
 
-<script>
-    // Аккордеон
-    document.querySelectorAll(".accordion-header").forEach(btn => {
-        btn.addEventListener("click", () => {
-            btn.parentElement.classList.toggle("open");
-        });
+    const chipChz  = document.getElementById('chip-chz');
+    const chipId   = document.getElementById('chip-id');
+    const chipMs   = document.getElementById('chip-ms');
+    const subtitle = document.getElementById('subtitle');
+
+    const badgeVerifiedDot  = document.getElementById('badge-verified-dot');
+    const badgeVerifiedText = document.getElementById('badge-verified-text');
+
+    const statusProfile = document.getElementById('status-profile');
+
+    const btnSave   = document.getElementById('btn-save');
+    const btnCancel = document.getElementById('btn-cancel');
+
+    const btnConnectMoy = document.getElementById('btn-connect-moy');
+    const statusMoyDot  = document.getElementById('status-moy-dot');
+    const statusMoyText = document.getElementById('status-moy-text');
+
+    const storeSelect   = document.getElementById('store-select');
+    const btnSaveStore  = document.getElementById('btn-save-store');
+
+    let originalProfile = null;
+
+    function loadProfileFromQuery() {
+      try {
+        const url = new URL(window.location.href);
+        const dataStr = url.searchParams.get('data');
+        if (!dataStr) {
+          subtitle.textContent = 'Данные профиля не переданы. Откройте профиль из бота.';
+          return;
+        }
+
+        const decoded = decodeURIComponent(dataStr);
+        const obj = JSON.parse(decoded);
+        originalProfile = obj;
+        window.profileData = obj;
+
+        fldName.value     = obj.name || '';
+        fldCity.value     = obj.city || '';
+        fldCategory.value = obj.category || '';
+        fldPhone.value    = obj.phone || '';
+        fldTelegram.value = obj.telegram || '';
+        fldSite.value     = obj.site || '';
+
+        const chz = !!obj.is_chz;
+        chipChz.textContent = 'ЧЗ / ЭДО: ' + (chz ? 'Да' : 'Нет');
+        chipChz.style.borderStyle = chz ? 'solid' : 'dashed';
+
+        const idVal = obj.id != null ? String(obj.id) : '—';
+        chipId.textContent = 'ID поставщика: ' + idVal;
+
+        const verified = !!obj.is_verified;
+        if (verified) {
+          badgeVerifiedText.textContent = 'Поставщик подтверждён';
+          badgeVerifiedDot.classList.remove('badge-dot-warn');
+          badgeVerifiedDot.classList.add('badge-dot-ok');
+        } else {
+          badgeVerifiedText.textContent = 'Ожидает подтверждения';
+          badgeVerifiedDot.classList.remove('badge-dot-ok');
+          badgeVerifiedDot.classList.add('badge-dot-warn');
+        }
+
+        const moyLinked   = !!obj.moy_linked;
+        const moyAccount  = obj.moy_account_id || null;
+
+        if (moyLinked) {
+          chipMs.textContent = 'МойСклад: подключен';
+          chipMs.style.borderStyle = 'solid';
+          statusMoyDot.className = '';
+          statusMoyDot.classList.add('status-dot-ok');
+          statusMoyText.textContent = moyAccount
+            ? `МойСклад привязан (account_id заканчивается на ...${String(moyAccount).slice(-6)})`
+            : 'МойСклад привязан к вашему Telegram.';
+          btnConnectMoy.textContent = '🔄 Переподключить МойСклад';
+        } else {
+          chipMs.textContent = 'МойСклад: не подключен';
+          chipMs.style.borderStyle = 'dashed';
+          statusMoyDot.className = '';
+          statusMoyDot.classList.add('status-dot-neutral');
+          statusMoyText.textContent = 'МойСклад ещё не привязан к вашему Telegram.';
+          btnConnectMoy.textContent = '🔗 Подключить МойСклад';
+        }
+
+        subtitle.textContent = `ID: ${idVal === '—' ? 'не назначен' : idVal}`;
+
+        fillStoreList();
+
+      } catch (e) {
+        console.error('parse profile error', e);
+        subtitle.textContent = 'Не удалось прочитать данные профиля.';
+      }
+    }
+
+    loadProfileFromQuery();
+
+    function fillStoreList() {
+      if (!storeSelect) return;
+
+      const data = window.profileData || {};
+      const stores = Array.isArray(data.stores) ? data.stores : [];
+      const defaultStoreId = data.default_store_id || null;
+
+      // очистить, оставить только "Все склады"
+      while (storeSelect.options.length > 1) {
+        storeSelect.remove(1);
+      }
+
+      stores.forEach((s) => {
+        if (!s || !s.id || !s.name) return;
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        storeSelect.appendChild(opt);
+      });
+
+      if (defaultStoreId) {
+        storeSelect.value = defaultStoreId;
+      } else {
+        storeSelect.value = 'all';
+      }
+    }
+
+    function setProfileStatus(type, text) {
+      let dot = statusProfile.querySelector('span');
+      let msg = statusProfile.querySelectorAll('span')[1];
+
+      dot.className = '';
+      if (type === 'loading') {
+        dot.classList.add('status-dot-loading');
+      } else if (type === 'ok') {
+        dot.classList.add('status-dot-ok');
+      } else {
+        dot.classList.add('status-dot-neutral');
+      }
+
+      msg.textContent = text;
+    }
+
+    btnSave.addEventListener('click', () => {
+      if (!tg) {
+        alert('Откройте этот экран из Telegram-бота.');
+        return;
+      }
+
+      const payload = {
+        action: 'save_supplier_profile',
+        name: fldName.value.trim(),
+        city: fldCity.value.trim(),
+        category: fldCategory.value.trim(),
+        phone: fldPhone.value.trim(),
+        telegram: fldTelegram.value.trim(),
+        site: fldSite.value.trim()
+      };
+
+      setProfileStatus('loading', 'Отправляю изменения в бота...');
+
+      try {
+        tg.sendData(JSON.stringify(payload));
+        setTimeout(() => {
+          setProfileStatus('ok', 'Изменения отправлены. Проверьте сообщение бота в Telegram.');
+        }, 600);
+      } catch (e) {
+        console.error(e);
+        setProfileStatus('error', 'Ошибка при отправке данных. Попробуйте ещё раз.');
+      }
     });
 
-    // ———————————— ЛОГИКА ТВОЕГО WEBAPP (НЕ МЕНЯЛАСЬ) ————————————
+    btnCancel.addEventListener('click', () => {
+      if (originalProfile) {
+        fldName.value     = originalProfile.name || '';
+        fldCity.value     = originalProfile.city || '';
+        fldCategory.value = originalProfile.category || '';
+        fldPhone.value    = originalProfile.phone || '';
+        fldTelegram.value = originalProfile.telegram || '';
+        fldSite.value     = originalProfile.site || '';
+      }
+      setProfileStatus('neutral', 'Изменения сброшены, профиль восстановлен.');
+    });
 
-    let tg = window.Telegram.WebApp;
 
-    function saveProfile() {
-        const payload = {
-            action: "save_supplier_profile",
-            name: fldName.value,
-            city: fldCity.value,
-            category: fldCategory.value,
-            phone: fldPhone.value,
-            telegram: fldTelegram.value,
-            site: fldSite.value
-        };
-        tg.sendData(JSON.stringify(payload));
+    if (btnSaveStore && storeSelect) {
+      btnSaveStore.addEventListener('click', () => {
+        if (!tg) {
+          alert('Откройте этот экран из Telegram-бота.');
+          return;
+        }
+
+        const storeId = storeSelect.value || 'all';
+
+        try {
+          tg.sendData(JSON.stringify({
+            action: 'set_moysklad_store',
+            store_id: storeId
+          }));
+          alert('Выбор склада отправлен в бот. Откройте чат и дождитесь подтверждения.');
+        } catch (e) {
+          console.error(e);
+          alert('Не удалось отправить выбор склада. Попробуйте ещё раз.');
+        }
+      });
     }
 
-    function saveStore() {
-        const payload = {
-            action: "save_store",
-            store: fldStore.value
-        };
-        tg.sendData(JSON.stringify(payload));
+
+    /* 🔥 НОВЫЙ ОБРАБОТЧИК МОЙСКЛАД — ТВОЯ ПРОСЬБА */
+    let connecting = false;
+
+    function setMoyStatus(type, text) {
+      statusMoyDot.className = '';
+      if (type === 'loading') {
+        statusMoyDot.classList.add('status-dot-loading');
+      } else if (type === 'ok') {
+        statusMoyDot.classList.add('status-dot-ok');
+      } else if (type === 'error') {
+        statusMoyDot.classList.add('badge-dot-warn');
+      } else {
+        statusMoyDot.classList.add('status-dot-neutral');
+      }
+      statusMoyText.textContent = text;
     }
 
-    function reconnectMS() {
-        const payload = {
-            action: "reconnect_moysklad"
-        };
-        tg.sendData(JSON.stringify(payload));
-    }
+    btnConnectMoy.addEventListener('click', () => {
+      if (!tg) {
+        alert('Откройте этот экран из Telegram-бота.');
+        return;
+      }
+      if (connecting) return;
 
-</script>
+      connecting = true;
+      btnConnectMoy.disabled = true;
 
+      setMoyStatus('loading', 'Отправляю запрос на привязку МойСклад к вашему Telegram...');
+
+      try {
+        tg.sendData(JSON.stringify({
+          action: 'connect_moysklad',
+          moy_account_id: window.profileData?.moy_account_id || null
+        }));
+      } catch (e) {
+        console.error(e);
+        setMoyStatus('error', 'Не удалось отправить запрос. Попробуйте ещё раз.');
+        btnConnectMoy.disabled = false;
+        connecting = false;
+        return;
+      }
+
+      setTimeout(() => {
+        setMoyStatus(
+          'ok',
+          'Запрос на привязку отправлен ✅\nОткройте чат с ботом — там будет сообщение о результате.'
+        );
+      }, 700);
+
+      setTimeout(() => {
+        connecting = false;
+        btnConnectMoy.disabled = false;
+      }, 2000);
+    });
+
+  </script>
 </body>
 </html>

@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <title>Профиль оптовика — OptoVizor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js">
+// ACCORDION
+document.querySelectorAll('.accordion-header').forEach(h=>{
+  h.addEventListener('click',()=>h.parentElement.classList.toggle('open'));
+});
+
+</script>
   <style>
     * {
       box-sizing: border-box;
@@ -306,7 +312,16 @@
         margin: 0 auto;
       }
     }
-  </style>
+  
+/* ACCORDION */
+.accordion {border-radius:16px;border:1px solid rgba(148,163,184,0.22);background:rgba(15,23,42,0.7);overflow:hidden;margin-top:12px;}
+.accordion-header {padding:14px 16px;font-size:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;}
+.accordion-body {display:none;}
+.accordion.open .accordion-body {display:block;}
+.acc-arrow {transition:transform 0.3s;}
+.accordion.open .acc-arrow {transform:rotate(180deg);}
+
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -382,7 +397,14 @@
       </section>
 
 
-      <section class="card" id="card-moy">
+      
+<div class="accordion" id="acc-ms">
+  <div class="accordion-header">
+    <span>МойСклад — интеграция</span>
+    <span class="acc-arrow">▼</span>
+  </div>
+  <div class="accordion-body">
+    <section class="card" id="card-moy">
         <div class="card-header">
           <div>
             <div class="card-title">Интеграция с МойСклад</div>
@@ -442,6 +464,9 @@
           Если ничего не происходит, вернитесь в чат с ботом и отправьте команду <b>/start</b>, затем откройте профиль снова.
         </div>
       </section>
+  </div>
+</div>
+
 
     </div>
   </div>
@@ -717,6 +742,12 @@
       }, 2000);
     });
 
-  </script>
+  
+// ACCORDION
+document.querySelectorAll('.accordion-header').forEach(h=>{
+  h.addEventListener('click',()=>h.parentElement.classList.toggle('open'));
+});
+
+</script>
 </body>
 </html>

@@ -4,13 +4,7 @@
   <meta charset="UTF-8" />
   <title>Профиль оптовика — OptoVizor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://telegram.org/js/telegram-web-app.js">
-// ACCORDION
-document.querySelectorAll('.accordion-header').forEach(h=>{
-  h.addEventListener('click',()=>h.parentElement.classList.toggle('open'));
-});
-
-</script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -394,6 +388,17 @@ document.querySelectorAll('.accordion-header').forEach(h=>{
           <span class="status-dot-neutral"></span>
           <span>Изменения пока не отправлялись.</span>
         </div>
+<div class="btn-row" style="margin-top:10px; display:flex; gap:8px;">
+  <a href="https://sonimz1307-pixel.github.io/optovizor-moysklad-instruction/company.html"
+     target="_blank"
+     class="btn btn-soft"
+     style="flex:1; text-align:center; text-decoration:none;">🌐 Сайт OptoVizor</a>
+
+  <a href="https://t.me/opto_placeholder"
+     target="_blank"
+     class="btn btn-soft"
+     style="flex:1; text-align:center; text-decoration:none;">💬 Telegram‑сообщество</a>
+</div>
       </section>
 
 
@@ -469,7 +474,33 @@ document.querySelectorAll('.accordion-header').forEach(h=>{
 
 
     </div>
+  
+<div class="accordion" id="acc-1c">
+  <div class="accordion-header">
+    <span>1С — интеграция</span>
+    <span class="acc-arrow">▼</span>
   </div>
+  <div class="accordion-body">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">1С — интеграция (скоро)</div>
+          <div class="card-sub">Ведётся разработка обмена товарами и остатками с 1С.</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <div class="label">Статус</div>
+          <div class="status-line">
+            <span class="status-dot-neutral"></span>
+            <span>Модуль находится в разработке.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</div>
 
   <script>
     const tg = window.Telegram && window.Telegram.WebApp;

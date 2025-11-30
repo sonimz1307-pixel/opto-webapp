@@ -505,8 +505,11 @@
   <script>
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) {
-      tg.expand();
-      tg.ready();
+      // Небольшая задержка, чтобы избежать бага Telegram WebApp с пустым экраном
+      setTimeout(() => {
+        tg.ready();
+        tg.expand();
+      }, 200);
     }
 
     const fldName     = document.getElementById('fld-name');

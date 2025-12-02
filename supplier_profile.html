@@ -401,74 +401,72 @@
 </div>
       </section>
 
+<!-- ===========================
+     МойСклад — НОВАЯ ИНТЕГРАЦИЯ
+     =========================== -->
 
-      
 <div class="accordion" id="acc-ms">
   <div class="accordion-header">
-    <span>МойСклад — интеграция</span>
+    <span>МойСклад — интеграция (новая система)</span>
     <span class="acc-arrow">▼</span>
   </div>
+
   <div class="accordion-body">
-    <section class="card" id="card-moy">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Интеграция с МойСклад</div>
-            <div class="card-sub">Подключите синхронизацию остатков и прайсов</div>
-          </div>
-          <div class="badge">
-            <span class="badge-dot-ok" id="badge-moy-dot"></span>
-            <span id="badge-moy-text">Через бота</span>
-          </div>
-        </div>
+    <section class="card" id="card-ms">
 
-        <div class="form-grid">
-          <div class="field">
-            <div class="label">Статус подключения</div>
-            <div class="status-line" id="status-moy">
-              <span class="status-dot-neutral" id="status-moy-dot"></span>
-              <span id="status-moy-text">МойСклад ещё не привязан к вашему Telegram.</span>
-            </div>
-          </div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">Привязка аккаунта МойСклад</div>
+          <div class="card-sub">Используйте токен для подключения</div>
         </div>
+        <div class="badge">
+          <span id="ms-badge-dot" class="status-dot-neutral"></span>
+          <span id="ms-badge-text">Не привязан</span>
+        </div>
+      </div>
 
-        <div class="form-grid">
-          <div class="field">
-            <div class="label">Склад для синхронизации</div>
-            <select id="store-select" class="input">
-              <option value="all">Все склады</option>
-            </select>
-          </div>
+      <!-- TOKEN FIELD -->
+      <div class="form-grid">
+        <div class="field">
+          <div class="label">Ваш токен для МойСклад</div>
+          <input id="ms-token" class="input" readonly placeholder="Токен загружается..." />
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-primary" id="btn-save-store">
-            💾 Сохранить склад
-          </button>
+          <button class="btn btn-soft" id="ms-copy">📋 Скопировать токен</button>
         </div>
+      </div>
 
-        <div class="btn-row">
-          <button class="btn btn-primary" id="btn-connect-moy">
-            🔗 Подключить МойСклад
-          </button>
-        </div>
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="label">Инструкция</div>
 
         <div class="steps">
-          <div class="steps-title">Как это работает:</div>
+          <div class="steps-title">Как подключить МойСклад:</div>
           <ol>
-            <li>Нажмите «Подключить МойСклад» — бот привяжет ваш Telegram к аккаунту МойСклад.</li>
-            <li>В чате с ботом появится сообщение с результатом.</li>
-            <li>Если приложение ещё не установлено — зайдите в раздел «Приложения» в МойСклад и установите OptoVizor.</li>
+            <li>Откройте приложение OptoVizor в МойСклад.</li>
+            <li>Введите туда этот токен.</li>
+            <li>Нажмите «Привязать» в МойСклад.</li>
+            <li>Нажмите «Проверить привязку» ниже.</li>
           </ol>
         </div>
+      </div>
 
-        <a href="https://online.moysklad.ru/" target="_blank" class="link-btn">
-          Открыть МойСклад
-        </a>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-primary" id="ms-check">
+          🔍 Проверить привязку
+        </button>
+      </div>
 
-        <div class="footer-hint">
-          Если ничего не происходит, вернитесь в чат с ботом и отправьте команду <b>/start</b>, затем откройте профиль снова.
-        </div>
-      </section>
+      <a href="https://online.moysklad.ru/" target="_blank" class="link-btn" style="margin-top:12px;">
+        🌐 Открыть МойСклад
+      </a>
+
+      <div class="status-line" id="ms-status">
+        <span class="status-dot-neutral"></span>
+        <span>Ожидает привязки...</span>
+      </div>
+
+    </section>
   </div>
 </div>
 

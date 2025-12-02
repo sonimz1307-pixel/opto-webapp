@@ -248,6 +248,12 @@
             <input id="fld-site" class="input" placeholder="https://..." />
           </div>
 
+          <div class="field">
+            <div class="label">Ваш токен OptoVizor</div>
+            <input id="fld-token" class="input" readonly placeholder="Загружаю токен..." />
+          </div>
+
+
           <div class="chips-row" id="chips-row">
             <div class="chip" id="chip-chz">ЧЗ / ЭДО: нет данных</div>
             <div class="chip" id="chip-id">ID поставщика: —</div>
@@ -452,6 +458,8 @@ function loadProfileFromQuery() {
     fldPhone.value    = obj.phone || '';
     fldTelegram.value = obj.telegram || '';
     fldSite.value     = obj.site || '';
+    const fldToken      = document.getElementById('fld-token');
+    fldToken.value    = obj.token || '—';
 
     const chz = !!obj.is_chz;
     chipChz.textContent = 'ЧЗ / ЭДО: ' + (chz ? 'Да' : 'Нет');

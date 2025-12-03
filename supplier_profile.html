@@ -177,7 +177,21 @@
     @media (min-width: 768px) {
       .wrap { max-width: 520px; margin: 0 auto; }
     }
-  </style>
+  
+.opto-btn {
+  background: rgba(15,23,42,0.9) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #e5e7eb !important;
+  border-radius: 999px !important;
+  padding: 10px 14px !important;
+}
+.opto-btn-primary {
+  background: rgba(15,23,42,0.9) !important;
+  border: 1px solid #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56,189,248,0.4);
+}
+
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -256,10 +270,12 @@
           </div>
         </div>
 
-        <div class="btn-row">
-          <button class="btn btn-soft" id="btn-cancel">Отмена</button>
-          <button class="btn btn-primary" id="btn-save">💾 Сохранить профиль</button>
-        </div>
+        
+<div class="btn-row">
+  <button class="btn btn-soft opto-btn" id="btn-cancel">Отмена</button>
+  <button class="btn btn-primary opto-btn-primary" id="btn-save">Сохранить профиль</button>
+</div>
+
 
         <div class="status-line" id="status-profile">
           <span class="status-dot-neutral"></span>
@@ -284,20 +300,50 @@
            М О Й С К Л А Д — Н О В А Я  И Н Т Е Г Р А Ц И Я
       ====================================================== -->
 
-      <div class="accordion" id="acc-ms">
-        <div class="accordion-header">
-          <span>МойСклад — интеграция (новая система)</span>
-          <span class="acc-arrow">▼</span>
+      
+<div class="accordion" id="acc-ms">
+  <div class="accordion-header">
+    <span>МойСклад — интеграция (новая система)</span>
+    <span class="acc-arrow">▼</span>
+  </div>
+  <div class="accordion-body">
+    <section class="card" id="card-ms">
+
+      <div class="card-header">
+        <div>
+          <div class="card-title">Интеграция с МойСклад</div>
+          <div class="card-sub">Подключение и выбор склада</div>
         </div>
+        <div class="badge">
+          <span id="ms-badge-dot" class="status-dot-neutral"></span>
+          <span id="ms-badge-text">Не подключен</span>
+        </div>
+      </div>
 
-        <div class="accordion-body">
-          <section class="card" id="card-ms">
+      <div class="form-grid">
+        <button class="btn btn-soft opto-btn" id="ms-connect-btn">🔗 Подключить МойСклад</button>
+      </div>
 
-            <div class="card-header">
-              <div>
-                <div class="card-title">Привязка аккаунта МойСклад</div>
-                <div class="card-sub">Используйте токен для подключения</div>
-              </div>
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="label">Склад для синхронизации</div>
+        <select id="ms-store-select" class="input" disabled>
+          <option>Подключите МойСклад...</option>
+        </select>
+      </div>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-soft opto-btn" id="ms-save-store" disabled>💾 Сохранить склад</button>
+      </div>
+
+      <div class="status-line" id="ms-status">
+        <span class="status-dot-neutral"></span>
+        <span id="ms-status-text">Ожидает подключения…</span>
+      </div>
+
+    </section>
+  </div>
+</div>
+
               <div class="badge">
                 <span id="ms-badge-dot" class="status-dot-neutral"></span>
                 <span id="ms-badge-text">Не привязан</span>

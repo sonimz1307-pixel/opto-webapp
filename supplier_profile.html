@@ -279,7 +279,7 @@
 
 
       <!-- ======================================================
-           М О Й С К Л А Д — Н О В А Я  И Н Т Е Г Р А Ц И Я
+           М О Й С К Л А Д —   И Н Т Е Г Р А Ц И Я  (НОВАЯ)
       ====================================================== -->
 
       <div class="accordion" id="acc-ms">
@@ -290,64 +290,66 @@
 
         <div class="accordion-body">
           <section class="card" id="card-ms">
-
+            <!-- HEADER -->
             <div class="card-header">
               <div>
-                <div class="card-title">Привязка аккаунта МойСклад</div>
-                <div class="card-sub">Используйте токен для подключения</div>
+                <div class="card-title">Интеграция с МойСклад</div>
+                <div class="card-sub">Подключение аккаунта и выбор склада</div>
               </div>
+
               <div class="badge">
                 <span id="ms-badge-dot" class="status-dot-neutral"></span>
-                <span id="ms-badge-text">Не привязан</span>
+                <span id="ms-badge-text">Не подключен</span>
               </div>
             </div>
 
-
-            <!-- TOKEN BLOCK -->
-            <div class="form-grid">
+            <!-- КНОПКА ПОДКЛЮЧЕНИЯ -->
+            <div class="form-grid" style="margin-top: 8px;">
               <div class="field">
-                <div class="label">Ваш персональный токен OptoVizor (укажите его в приложении МойСклад)</div>
-                <input id="ms-token" class="input" readonly placeholder="Токен загружается..." />
+                <div class="label">Статус подключения</div>
+                <div class="card-sub" style="margin-top:4px;">
+                  После подключения здесь появится информация об аккаунте.
+                </div>
               </div>
 
               <div class="btn-row">
-                <button class="btn btn-soft" id="ms-copy">📋 Скопировать токен</button>
+                <button class="btn btn-primary" id="ms-connect-btn"
+                        style="padding:10px 14px; font-size:14px;">
+                  🔗 Подключить МойСклад
+                </button>
               </div>
             </div>
 
+            <!-- ТОНКАЯ ЛИНИЯ -->
+            <div style="height:1px; background:rgba(148,163,184,0.25); margin:16px 0;"></div>
 
-            <!-- INSTRUCTIONS -->
-            <div class="form-grid" style="margin-top:12px;">
-              <div class="label">Инструкция</div>
+            <!-- ВЫБОР СКЛАДА (пока заглушка) -->
+            <div class="form-grid">
+              <div class="field">
+                <div class="label">Склад для синхронизации</div>
+                <select id="ms-store-select" class="input" disabled>
+                  <option value="all">Доступно после подключения</option>
+                </select>
+              </div>
 
-              <div class="steps">
-                <div class="steps-title">Как подключить МойСклад:</div>
-                <ol>
-                  <li>Откройте приложение OptoVizor в МойСклад.</li>
-                  <li>Введите туда этот токен.</li>
-                  <li>Нажмите «Привязать» в приложении.</li>
-                  <li>Вернитесь сюда и нажмите «Проверить привязку».</li>
-                </ol>
+              <div class="btn-row">
+                <button class="btn btn-soft" id="ms-save-store"
+                        style="padding:10px 14px; font-size:14px;" disabled>
+                  💾 Сохранить склад
+                </button>
               </div>
             </div>
 
-
-            <!-- BUTTON CHECK -->
-            <div class="btn-row" style="margin-top:12px;">
-              <button class="btn btn-primary" id="ms-check">🔍 Проверить привязку</button>
-            </div>
-
-            <a href="https://online.moysklad.ru/"
-               target="_blank"
-               class="link-btn">
-              🌐 Открыть МойСклад
-            </a>
-
-            <div class="status-line" id="ms-status">
+            <!-- СТАТУС -->
+            <div class="status-line" id="ms-status" style="margin-top:16px;">
               <span class="status-dot-neutral"></span>
-              <span>Ожидает привязки...</span>
+              <span id="ms-status-text">Ожидает подключения…</span>
             </div>
 
+            <div class="card-sub" style="margin-top:8px;">
+              После подключения мы подгрузим ваши склады из МойСклад и дадим выбрать,
+              с каким складом синхронизировать остатки.
+            </div>
           </section>
         </div>
       </div>

@@ -251,6 +251,8 @@
           <div class="chips-row" id="chips-row">
             <div class="chip" id="chip-chz">ЧЗ / ЭДО: нет данных</div>
             <div class="chip" id="chip-id">ID поставщика: —</div>
+    <div class="chip" id="chip-token">Токен: —</div>
+
           </div>
         </div>
 
@@ -459,6 +461,7 @@ function loadProfileFromQuery() {
 
     const idVal = obj.id != null ? String(obj.id) : '—';
     chipId.textContent = 'ID поставщика: ' + idVal;
+    document.getElementById("chip-token").textContent = "Токен: " + (obj.token || "—");
     subtitle.textContent = `ID: ${idVal}`;
 
     // Верификация
@@ -559,7 +562,7 @@ function setMsStatus(type, text) {
   dot.className = '';
   if (type === 'loading') dot.classList.add('status-dot-loading');
   else if (type === 'ok') dot.classList.add('status-dot-ok');
-  else if (type === 'error') dot.classList.add('status-dot-neutral');
+  else if (type === 'error') dot.classList.add('status-dot-warn');
   else dot.classList.add('status-dot-neutral');
 
   msg.textContent = text;

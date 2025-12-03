@@ -451,7 +451,11 @@ function loadProfileFromQuery() {
 
     const idVal = obj.id != null ? String(obj.id) : '—';
     chipId.textContent = 'ID поставщика: ' + idVal;
-    document.getElementById("chip-token").textContent = "Токен: " + (obj.token || "—");
+    const chipToken = document.getElementById('chip-token');
+    if (chipToken) {
+      chipToken.textContent = 'Токен: ' + (obj.token || '—');
+    }
+
     subtitle.textContent = `ID: ${idVal}`;
 
     // Верификация
@@ -463,8 +467,8 @@ function loadProfileFromQuery() {
       badgeVerifiedText.textContent = 'Ожидает подтверждения';
     }
 
-    // Состояние токена (первичное)
-    updateMsToken();
+    // Стартовое состояние блока МойСклад
+    updateMsUIFromProfile();
 
   } catch (e) {
     console.error('Ошибка чтения профиля:', e);
@@ -534,93 +538,140 @@ btnCancel.addEventListener('click', () => {
 
 
 /* =====================================================
-   НОВАЯ ИНТЕГРАЦИЯ МОЙСКЛАД — ЧЕРЕЗ ТОКЕН
+   ИНТЕГРАЦИЯ МОЙСКЛАД — НОВЫЙ UI (БЕЗ ТОКЕНА ВНУТРИ)
 ===================================================== */
 
-const msTokenInput = document.getElementById('ms-token');
 const msBadgeDot   = document.getElementById('ms-badge-dot');
 const msBadgeText  = document.getElementById('ms-badge-text');
 const msStatus     = document.getElementById('ms-status');
-
-const msCopyBtn    = document.getElementById('ms-copy');
-const msCheckBtn   = document.getElementById('ms-check');
+const msConnectBtn = document.getElementById('ms-connect-btn');
+const msStoreSelect= document.getElementById('ms-store-select');
+const msSaveStore  = document.getElementById('ms-save-store');
 
 function setMsStatus(type, text) {
+  if (!msStatus) return;
   const dot = msStatus.querySelector('span');
-  const msg = msStatus.querySelectorAll('span')[1];
+  const msg = document.getElementById('ms-status-text') || msStatus.querySelectorAll('span')[1];
+  if (!dot || !msg) return;
 
   dot.className = '';
   if (type === 'loading') dot.classList.add('status-dot-loading');
   else if (type === 'ok') dot.classList.add('status-dot-ok');
-  else if (type === 'error') dot.classList.add('status-dot-warn');
   else dot.classList.add('status-dot-neutral');
 
   msg.textContent = text;
 }
 
-
 function updateMsBadge(linked, accountId) {
+  if (!msBadgeDot || !msBadgeText) return;
+
   if (linked) {
     msBadgeDot.className = 'status-dot-ok';
     msBadgeText.textContent =
       accountId ? `Привязан (…${String(accountId).slice(-6)})` : 'Привязан';
   } else {
     msBadgeDot.className = 'status-dot-neutral';
-    msBadgeText.textContent = 'Не привязан';
+    msBadgeText.textContent = 'Не подключен';
   }
 }
 
-
-function updateMsToken() {
+function updateMsUIFromProfile() {
   const data = window.profileData || {};
-  const token = data.token || '';
+  const linked = !!data.moy_linked;
 
-  if (!token) {
-    msTokenInput.value = 'Токен не найден';
-    setMsStatus('neutral', 'Токен отсутствует.');
-    updateMsBadge(false, null);
-    return;
+  updateMsBadge(linked, data.moy_account_id);
+
+  if (msStoreSelect) {
+    msStoreSelect.disabled = !linked;
+  }
+  if (msSaveStore) {
+    msSaveStore.disabled = !linked;
   }
 
-  msTokenInput.value = token;
-
-  if (data.moy_linked) {
+  if (linked) {
     setMsStatus('ok', 'МойСклад привязан.');
   } else {
-    setMsStatus('neutral', 'Ожидает привязки...');
+    setMsStatus('neutral', 'Ожидает подключения…');
   }
-
-  updateMsBadge(data.moy_linked, data.moy_account_id);
 }
 
+// 🔗 Кнопка "Подключить МойСклад" — пока ЗАГЛУШКА + UI-эффект
+if (msConnectBtn) {
+  msConnectBtn.addEventListener('click', () => {
+    if (!tg) {
+      alert('Откройте экран из Telegram-бота.');
+      return;
+    }
 
-msCopyBtn.addEventListener('click', () => {
-  const token = msTokenInput.value.trim();
-  if (!token || token === 'Токен не найден') return;
-  navigator.clipboard.writeText(token);
-  alert('Токен скопирован!');
-});
+    setMsStatus('loading', 'Отправляю запрос на подключение…');
 
+    try {
+      tg.sendData(JSON.stringify({
+        action: 'connect_moysklad'
+      }));
+    } catch (e) {
+      console.error(e);
+    }
 
-msCheckBtn.addEventListener('click', () => {
-  if (!tg) return alert('Откройте экран из Telegram-бота.');
-
-  setMsStatus('loading', 'Проверяю привязку…');
-
-  try {
-    tg.sendData(JSON.stringify({
-      action: "check_moysklad_link"
-    }));
-
+    // Заглушка: визуально считаем, что подключение прошло успешно
     setTimeout(() => {
-      setMsStatus('ok', 'Запрос отправлен. Проверьте чат с ботом.');
-    }, 700);
+      // Активируем селект и кнопку
+      if (msStoreSelect) {
+        msStoreSelect.disabled = false;
 
-  } catch (e) {
-    console.error(e);
-    setMsStatus('error', 'Ошибка отправки.');
-  }
-});
+        // Если в селекте только плейсхолдер — добавим пару тестовых складов
+        if (msStoreSelect.options.length <= 1) {
+          const opt1 = document.createElement('option');
+          opt1.value = 'main';
+          opt1.textContent = 'Основной склад';
+
+          const opt2 = document.createElement('option');
+          opt2.value = 'online';
+          opt2.textContent = 'Интернет-магазин';
+
+          msStoreSelect.appendChild(opt1);
+          msStoreSelect.appendChild(opt2);
+        }
+      }
+      if (msSaveStore) {
+        msSaveStore.disabled = false;
+      }
+
+      updateMsBadge(true, window.profileData && window.profileData.moy_account_id);
+      setMsStatus('ok', 'Запрос отправлен. Проверьте чат и выберите склад.');
+    }, 600);
+  });
+}
+
+// 💾 Кнопка "Сохранить склад"
+if (msSaveStore) {
+  msSaveStore.addEventListener('click', () => {
+    if (!tg) {
+      alert('Откройте экран из Telegram-бота.');
+      return;
+    }
+    if (!msStoreSelect || !msStoreSelect.value) {
+      alert('Выберите склад для синхронизации.');
+      return;
+    }
+
+    setMsStatus('loading', 'Сохраняю выбранный склад…');
+
+    try {
+      tg.sendData(JSON.stringify({
+        action: 'save_moysklad_store',
+        store_id: msStoreSelect.value
+      }));
+
+      setTimeout(() => {
+        setMsStatus('ok', 'Склад сохранён. Проверьте чат.');
+      }, 600);
+    } catch (e) {
+      console.error(e);
+      setMsStatus('neutral', 'Ошибка отправки.');
+    }
+  });
+}
 
 
 
@@ -633,3 +684,4 @@ document.querySelectorAll('.accordion-header').forEach(h => {
   });
 });
 </script>
+

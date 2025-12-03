@@ -277,8 +277,9 @@
       </section>
 
 
+
       <!-- ======================================================
-           М О Й С К Л А Д —   И Н Т Е Г Р А Ц И Я  (НОВАЯ)
+           М О Й С К Л А Д — Н О В А Я  И Н Т Е Г Р А Ц И Я
       ====================================================== -->
 
       <div class="accordion" id="acc-ms">
@@ -289,69 +290,68 @@
 
         <div class="accordion-body">
           <section class="card" id="card-ms">
-            <!-- HEADER -->
+
             <div class="card-header">
               <div>
-                <div class="card-title">Интеграция с МойСклад</div>
-                <div class="card-sub">Подключение аккаунта и выбор склада</div>
+                <div class="card-title">Привязка аккаунта МойСклад</div>
+                <div class="card-sub">Используйте токен для подключения</div>
               </div>
-
               <div class="badge">
                 <span id="ms-badge-dot" class="status-dot-neutral"></span>
-                <span id="ms-badge-text">Не подключен</span>
+                <span id="ms-badge-text">Не привязан</span>
               </div>
             </div>
 
-            <!-- КНОПКА ПОДКЛЮЧЕНИЯ -->
-            <div class="form-grid" style="margin-top: 8px;">
-              <div class="field">
-                <div class="label">Статус подключения</div>
-                <div class="card-sub" style="margin-top:4px;">
-                  После подключения здесь появится информация об аккаунте.
-                </div>
-              </div>
 
-              <div class="btn-row">
-                <button class="btn btn-primary" id="ms-connect-btn"
-                        style="padding:10px 14px; font-size:14px;">
-                  🔗 Подключить МойСклад
-                </button>
-              </div>
-            </div>
-
-            <!-- ТОНКАЯ ЛИНИЯ -->
-            <div style="height:1px; background:rgba(148,163,184,0.25); margin:16px 0;"></div>
-
-            <!-- ВЫБОР СКЛАДА (пока заглушка) -->
+            <!-- TOKEN BLOCK -->
             <div class="form-grid">
               <div class="field">
-                <div class="label">Склад для синхронизации</div>
-                <select id="ms-store-select" class="input" disabled>
-                  <option value="all">Доступно после подключения</option>
-                </select>
+                <div class="label">Ваш персональный токен OptoVizor (укажите его в приложении МойСклад)</div>
+                <input id="ms-token" class="input" readonly placeholder="Токен загружается..." />
               </div>
 
               <div class="btn-row">
-                <button class="btn btn-soft" id="ms-save-store"
-                        style="padding:10px 14px; font-size:14px;" disabled>
-                  💾 Сохранить склад
-                </button>
+                <button class="btn btn-soft" id="ms-copy">📋 Скопировать токен</button>
               </div>
             </div>
 
-            <!-- СТАТУС -->
-            <div class="status-line" id="ms-status" style="margin-top:16px;">
-              <span class="status-dot-neutral"></span>
-              <span id="ms-status-text">Ожидает подключения…</span>
+
+            <!-- INSTRUCTIONS -->
+            <div class="form-grid" style="margin-top:12px;">
+              <div class="label">Инструкция</div>
+
+              <div class="steps">
+                <div class="steps-title">Как подключить МойСклад:</div>
+                <ol>
+                  <li>Откройте приложение OptoVizor в МойСклад.</li>
+                  <li>Введите туда этот токен.</li>
+                  <li>Нажмите «Привязать» в приложении.</li>
+                  <li>Вернитесь сюда и нажмите «Проверить привязку».</li>
+                </ol>
+              </div>
             </div>
 
-            <div class="card-sub" style="margin-top:8px;">
-              После подключения мы подгрузим ваши склады из МойСклад и дадим выбрать,
-              с каким складом синхронизировать остатки.
+
+            <!-- BUTTON CHECK -->
+            <div class="btn-row" style="margin-top:12px;">
+              <button class="btn btn-primary" id="ms-check">🔍 Проверить привязку</button>
             </div>
+
+            <a href="https://online.moysklad.ru/"
+               target="_blank"
+               class="link-btn">
+              🌐 Открыть МойСклад
+            </a>
+
+            <div class="status-line" id="ms-status">
+              <span class="status-dot-neutral"></span>
+              <span>Ожидает привязки...</span>
+            </div>
+
           </section>
         </div>
       </div>
+
 
 
       <!-- ======================================================
@@ -470,6 +470,9 @@ function loadProfileFromQuery() {
       badgeVerifiedText.textContent = 'Ожидает подтверждения';
     }
 
+    // Состояние токена (первичное)
+    updateMsToken();
+
   } catch (e) {
     console.error('Ошибка чтения профиля:', e);
     subtitle.textContent = 'Не удалось прочитать данные профиля.';
@@ -506,7 +509,7 @@ btnSave.addEventListener('click', () => {
     phone: fldPhone.value.trim(),
     telegram: fldTelegram.value.trim(),
     site: fldSite.value.trim(),
-    token: window.profileData && window.profileData.token
+    token: window.profileData.token
   };
 
   setProfileStatus('loading', 'Отправляю изменения...');
@@ -538,87 +541,94 @@ btnCancel.addEventListener('click', () => {
 
 
 /* =====================================================
-   М О Й С К Л А Д — ИНТЕГРАЦИЯ (ЗАГЛУШКА)
+   НОВАЯ ИНТЕГРАЦИЯ МОЙСКЛАД — ЧЕРЕЗ ТОКЕН
 ===================================================== */
 
-const msConnectBtn = document.getElementById("ms-connect-btn");
-const msSaveStore  = document.getElementById("ms-save-store");
-const msStoreSelect = document.getElementById("ms-store-select");
+const msTokenInput = document.getElementById('ms-token');
+const msBadgeDot   = document.getElementById('ms-badge-dot');
+const msBadgeText  = document.getElementById('ms-badge-text');
+const msStatus     = document.getElementById('ms-status');
 
-const msStatusLine = document.getElementById("ms-status");
-const msStatusText = document.getElementById("ms-status-text");
-const msBadgeDot   = document.getElementById("ms-badge-dot");
-const msBadgeText  = document.getElementById("ms-badge-text");
+const msCopyBtn    = document.getElementById('ms-copy');
+const msCheckBtn   = document.getElementById('ms-check');
 
-/* Утилита установки статуса */
 function setMsStatus(type, text) {
-  msStatusText.textContent = text;
+  const dot = msStatus.querySelector('span');
+  const msg = msStatus.querySelectorAll('span')[1];
 
-  msBadgeDot.className = "";
-  if (type === "loading") {
-    msBadgeDot.classList.add("status-dot-loading");
-  } else if (type === "ok") {
-    msBadgeDot.classList.add("status-dot-ok");
+  dot.className = '';
+  if (type === 'loading') dot.classList.add('status-dot-loading');
+  else if (type === 'ok') dot.classList.add('status-dot-ok');
+  else if (type === 'error') dot.classList.add('status-dot-warn');
+  else dot.classList.add('status-dot-neutral');
+
+  msg.textContent = text;
+}
+
+
+function updateMsBadge(linked, accountId) {
+  if (linked) {
+    msBadgeDot.className = 'status-dot-ok';
+    msBadgeText.textContent =
+      accountId ? `Привязан (…${String(accountId).slice(-6)})` : 'Привязан';
   } else {
-    msBadgeDot.classList.add("status-dot-neutral");
+    msBadgeDot.className = 'status-dot-neutral';
+    msBadgeText.textContent = 'Не привязан';
   }
 }
 
-/* -----------------------------------------
-   КНОПКА «Подключить МойСклад»
------------------------------------------ */
-if (msConnectBtn) {
-  msConnectBtn.addEventListener("click", () => {
-    if (!tg) return alert("Откройте через Telegram-бота");
 
-    setMsStatus("loading", "Отправляю запрос...");
-    msBadgeText.textContent = "Подключение...";
+function updateMsToken() {
+  const data = window.profileData || {};
+  const token = data.token || '';
 
-    try {
-      tg.sendData(JSON.stringify({ action: "moysklad_connect_stub" }));
+  if (!token) {
+    msTokenInput.value = 'Токен не найден';
+    setMsStatus('neutral', 'Токен отсутствует.');
+    updateMsBadge(false, null);
+    return;
+  }
 
-      setTimeout(() => {
-        setMsStatus("ok", "Подключение выполнено (заглушка)");
-        msBadgeText.textContent = "Подключено (тест)";
-        msStoreSelect.disabled = false;
-        msSaveStore.disabled = false;
-      }, 800);
+  msTokenInput.value = token;
 
-    } catch (e) {
-      console.error(e);
-      setMsStatus("neutral", "Ошибка отправки");
-      msBadgeText.textContent = "Не подключен";
-    }
-  });
+  if (data.moy_linked) {
+    setMsStatus('ok', 'МойСклад привязан.');
+  } else {
+    setMsStatus('neutral', 'Ожидает привязки...');
+  }
+
+  updateMsBadge(data.moy_linked, data.moy_account_id);
 }
 
-/* -----------------------------------------
-   КНОПКА «Сохранить склад»
------------------------------------------ */
-if (msSaveStore) {
-  msSaveStore.addEventListener("click", () => {
-    if (!tg) return alert("Откройте через Telegram-бота");
 
-    const store = msStoreSelect.value;
+msCopyBtn.addEventListener('click', () => {
+  const token = msTokenInput.value.trim();
+  if (!token || token === 'Токен не найден') return;
+  navigator.clipboard.writeText(token);
+  alert('Токен скопирован!');
+});
 
-    setMsStatus("loading", "Сохраняю склад...");
 
-    try {
-      tg.sendData(JSON.stringify({
-        action: "moysklad_save_store_stub",
-        store: store
-      }));
+msCheckBtn.addEventListener('click', () => {
+  if (!tg) return alert('Откройте экран из Telegram-бота.');
 
-      setTimeout(() => {
-        setMsStatus("ok", "Склад сохранён (заглушка)");
-      }, 600);
+  setMsStatus('loading', 'Проверяю привязку…');
 
-    } catch (e) {
-      console.error(e);
-      setMsStatus("neutral", "Ошибка отправки.");
-    }
-  });
-}
+  try {
+    tg.sendData(JSON.stringify({
+      action: "check_moysklad_link"
+    }));
+
+    setTimeout(() => {
+      setMsStatus('ok', 'Запрос отправлен. Проверьте чат с ботом.');
+    }, 700);
+
+  } catch (e) {
+    console.error(e);
+    setMsStatus('error', 'Ошибка отправки.');
+  }
+});
+
 
 
 /* ============================
@@ -630,5 +640,3 @@ document.querySelectorAll('.accordion-header').forEach(h => {
   });
 });
 </script>
-</body>
-</html>

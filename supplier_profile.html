@@ -262,6 +262,12 @@
             <input id="fld-site" class="input" placeholder="https://..." />
           </div>
 
+          <!-- === О КОМПАНИИ === -->
+          <div class="field">
+            <div class="label">О компании / условия / бренды</div>
+             <textarea id="fld-about" class="input" placeholder="Например: бесплатная доставка от 30 000 ₽, официальный представитель Toyz, отгрузка день-в-день…" rows="4"></textarea>
+          </div>
+
           <div class="chips-row" id="chips-row">
             <div class="chip" id="chip-chz">ЧЗ / ЭДО: нет данных</div>
             <div class="chip" id="chip-id">ID поставщика: —</div>
@@ -444,6 +450,9 @@ function loadProfileFromQuery() {
     fldPhone.value    = obj.phone || '';
     fldTelegram.value = obj.telegram || '';
     fldSite.value     = obj.site || '';
+    const fldAbout = document.getElementById('fld-about');
+    fldAbout.value = obj.about || '';
+
 
     const chz = !!obj.is_chz;
     chipChz.textContent = 'ЧЗ / ЭДО: ' + (chz ? 'Да' : 'Нет');
@@ -506,6 +515,7 @@ btnSave.addEventListener('click', () => {
     phone: fldPhone.value.trim(),
     telegram: fldTelegram.value.trim(),
     site: fldSite.value.trim(),
+    about: fldAbout.value.trim(),
     token: window.profileData.token
   };
 
@@ -531,6 +541,7 @@ btnCancel.addEventListener('click', () => {
   fldPhone.value    = originalProfile.phone || '';
   fldTelegram.value = originalProfile.telegram || '';
   fldSite.value     = originalProfile.site || '';
+  fldAbout.value    = originalProfile.about || '';
 
   setProfileStatus('neutral', 'Изменения сброшены.');
 });
